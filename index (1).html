@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ถอดรหัสลับ ปราสาทเมืองสิงห์</title>
+<script>
+/* =====================================================================
+   ตั้งค่า Firebase (Realtime Database) — วางค่าของคุณที่ firebaseConfig ด้านล่าง
+   ---------------------------------------------------------------------
+   วิธีตั้งค่าทีละขั้นตอน (ใช้ฟรี ไม่ต้องผูกบัตรเครดิต):
+
+   1) เข้า https://console.firebase.google.com แล้วล็อกอินด้วยบัญชี Google
+   2) กด "Create a project" (สร้างโปรเจกต์) ตั้งชื่อ เช่น mueang-singh-game
+      แล้วกด Continue — หน้า Google Analytics ปิดไว้ได้ (Disable) แล้วกด Create project
+   3) เมื่อสร้างเสร็จ ที่หน้าแรกของโปรเจกต์ กดไอคอน </> (Web) เพื่อเพิ่มเว็บแอป
+      ตั้งชื่อแอปอะไรก็ได้ (ไม่ต้องติ๊ก Firebase Hosting) แล้วกด Register app
+   4) จะเห็นโค้ดที่มีก้อน const firebaseConfig = { ... }
+      ให้คัดลอกค่าข้างในมาใส่ด้านล่างนี้ (apiKey, authDomain, projectId, appId ฯลฯ)
+   5) กลับมาที่เมนูซ้าย Build > Realtime Database > กด "Create Database"
+      - เลือกภูมิภาค แนะนำ Singapore (asia-southeast1)
+      - เลือก "Start in test mode" แล้วกด Enable
+   6) คัดลอก URL ของฐานข้อมูลที่ด้านบนของหน้า Realtime Database
+      (หน้าตาแบบ https://ชื่อโปรเจกต์-default-rtdb.asia-southeast1.firebasedatabase.app)
+      มาใส่ที่ databaseURL ด้านล่าง  *** ขั้นตอนนี้สำคัญมาก ถ้าไม่ใส่ห้องจะเปิดไม่ได้ ***
+   7) ไปที่แท็บ Rules ของ Realtime Database วางโค้ดนี้แทนของเดิม แล้วกด Publish
+        {
+          "rules": {
+            "rooms": {
+              "$room": { ".read": true, ".write": true }
+            }
+          }
+        }
+      (โหมดทดสอบปกติจะหมดอายุใน 30 วัน ถ้าใช้กฎด้านบนจะใช้งานได้ต่อเนื่อง
+       ใช้เฉพาะเกมในห้องเรียนเท่านั้น ไม่ควรเก็บข้อมูลส่วนตัวสำคัญ)
+   8) บันทึกไฟล์นี้ แล้วนำขึ้นเว็บเพื่อให้มือถือเข้าได้ เช่น
+        - Netlify Drop: เข้า https://app.netlify.com/drop แล้วลากไฟล์ index.html ใส่
+        - หรือ GitHub Pages / Firebase Hosting
+      (ถ้าเปิดไฟล์จากเครื่องตรงๆ ผู้เล่นคนอื่นจะสแกนเข้าไม่ได้)
+   9) เปิดเกมจากลิงก์ที่ได้ เล่นจนถึงช่วงแข่งขัน กด "เปิดห้อง" จะมี QR ขึ้นมา
+      ลองสแกนด้วยมือถืออีกเครื่องเพื่อทดสอบ
+
+   หมายเหตุ: ถ้ายังไม่ใส่ค่าเหล่านี้ เกมยังเล่นได้ตามปกติ แต่เป็นโหมดเล่นคนเดียว
+   ===================================================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyAKepTt5BteTDdtCZHl82ALeWV8nFRBlkY",
+  authDomain: "prasart-muang-sing.firebaseapp.com",
+  databaseURL: "https://prasart-muang-sing-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "prasart-muang-sing",
+  storageBucket: "prasart-muang-sing.firebasestorage.app",
+  messagingSenderId: "487934807020",
+  appId: "1:487934807020:web:a20ebdbe06644b57dc4ec9"
+};
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@600;800&family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --lat:#8f4a2c; --lat-d:#4b2616; --lat-dd:#2b160d;
+  --sand:#cfc6b4; --sand-d:#8d8372;
+  --moss:#5d7a45; --river:#2c6e62; --river-d:#17433c; --mint:#bfe6d6;
+  --gold:#e2b04a; --leaf:#d8cf8c; --leaf-d:#a79a4f; --ink:#2f2010; --red:#e0332b;
+  --paper:#f1e6cf;
+  --cut:9px;
+}
+*{box-sizing:border-box;margin:0}
+[hidden]{display:none!important}
+html,body{height:100%;overflow:hidden;background:#1b0f09;color:var(--paper);font-family:'Sarabun','Noto Sans Thai',system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+h1,h2,h3,.serif{font-family:'Noto Serif Thai','Sarabun',serif}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+/* stepped (temple-tier) corners */
+.step{clip-path:polygon(0 var(--cut),var(--cut) var(--cut),var(--cut) 0,calc(100% - var(--cut)) 0,calc(100% - var(--cut)) var(--cut),100% var(--cut),100% calc(100% - var(--cut)),calc(100% - var(--cut)) calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,var(--cut) 100%,var(--cut) calc(100% - var(--cut)),0 calc(100% - var(--cut)))}
+.card{background:linear-gradient(#3b2316,#2a160d);box-shadow:inset 0 0 0 3px #7a4026,inset 0 0 0 6px #2a160d,inset 0 0 0 7px rgba(226,176,74,.55);padding:26px 26px 22px}
+.btn{display:inline-block;background:var(--gold);color:var(--lat-dd);font-weight:700;padding:.65em 1.4em;--cut:6px;font-size:1rem}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--gold);box-shadow:inset 0 0 0 2px var(--gold)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+/* ---------- stage ---------- */
+#stage{position:fixed;inset:0;overflow:hidden;background:#8fc9bd;touch-action:manipulation;z-index:1}
+#world{position:absolute;left:0;top:0;width:1280px;height:540px;transform-origin:0 0;will-change:transform}
+#world svg.bg{position:absolute;left:0;top:0;width:1280px;height:540px;overflow:visible}
+.ent{position:absolute;transform-origin:50% 100%;width:60px;height:120px}
+.ent .flip{width:60px;height:120px}
+.ent svg{display:block;overflow:visible}
+.tag{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:15px;font-weight:700;background:rgba(27,15,9,.8);color:var(--paper);padding:1px 10px;border-radius:99px;margin-bottom:2px;pointer-events:none}
+.walking .l{animation:stepL .34s ease-in-out infinite alternate}
+.walking .r{animation:stepR .34s ease-in-out infinite alternate}
+.walking .flip{animation:bob .34s ease-in-out infinite alternate}
+.lg{transform-box:fill-box;transform-origin:50% 0}
+@keyframes stepL{from{transform:rotate(-20deg)}to{transform:rotate(20deg)}}
+@keyframes stepR{from{transform:rotate(20deg)}to{transform:rotate(-20deg)}}
+@keyframes bob{from{translate:0 0}to{translate:0 -3px}}
+.hs{position:absolute;cursor:pointer;border-radius:10px;z-index:6}
+.hs:hover,.hs:focus-visible{background:rgba(226,176,74,.16);outline:2px dashed var(--gold)}
+.hs .ping,.ent.hs .ping{position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;border:3px solid var(--gold);background:rgba(226,176,74,.25);animation:ping 1.7s ease-out infinite;pointer-events:none}
+.ent.hs .ping{top:-6px}
+.hs.done .ping,.ent.hs.done .ping{display:none}
+.hs.done::after{content:"✓";position:absolute;right:6px;top:4px;width:26px;height:26px;border-radius:50%;background:var(--moss);color:#fff;font-weight:700;display:grid;place-items:center;font-size:16px}
+.ent.hs.done::after{display:none}
+@keyframes ping{0%{transform:scale(.6);opacity:1}100%{transform:scale(1.7);opacity:0}}
+.edge{position:absolute;z-index:4;font-weight:700;font-size:20px;color:#fff;text-shadow:0 2px 6px #000;pointer-events:none;animation:nudge 1.3s ease-in-out infinite alternate}
+@keyframes nudge{to{transform:translateX(8px)}}
+.edge.l{animation-name:nudgeL}
+@keyframes nudgeL{to{transform:translateX(-8px)}}
+
+/* ---------- HUD ---------- */
+#hud{position:fixed;left:0;right:0;top:0;z-index:10;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:max(10px,env(safe-area-inset-top)) 12px 0;pointer-events:none}
+#loc{background:rgba(27,15,9,.82);padding:8px 14px 9px;max-width:min(520px,62vw);pointer-events:auto;--cut:6px}
+#loc b{display:block;font-family:'Noto Serif Thai',serif;font-size:1.02rem;color:var(--gold)}
+#loc span{font-size:.92rem;line-height:1.35;display:block}
+#hudR{display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:auto}
+#nbBtn{background:var(--leaf);color:var(--ink);font-weight:700;padding:9px 14px;display:flex;gap:8px;align-items:center;--cut:6px;box-shadow:inset 0 -4px 0 var(--leaf-d)}
+#nbBtn em{font-style:normal;background:var(--lat-dd);color:var(--gold);padding:0 8px;border-radius:99px;font-size:.9rem}
+#nbBtn.pulse{animation:pulse 1s ease-in-out 4}
+@keyframes pulse{50%{transform:scale(1.08);box-shadow:0 0 0 6px rgba(226,176,74,.5)}}
+#beacon{display:flex;align-items:center;gap:8px;background:rgba(27,15,9,.85);padding:6px 12px;font-weight:700;color:#ffd6d2;--cut:6px}
+#beacon i{width:16px;height:16px;border-radius:50%;background:var(--red);box-shadow:0 0 12px 3px var(--red);animation:blink .6s steps(2) infinite}
+@keyframes blink{50%{opacity:.15}}
+
+/* ---------- dialogue ---------- */
+#dlg{position:fixed;left:50%;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(900px,calc(100vw - 20px));z-index:20;display:flex;gap:14px;align-items:center;min-height:112px;padding:14px 18px;cursor:pointer;background:linear-gradient(#34200f,#25140a);box-shadow:inset 0 0 0 3px #7a4026,inset 0 0 0 4px rgba(226,176,74,.5);--cut:8px}
+#dlg.sys{background:linear-gradient(#0f2f2a,#0a1f1c);box-shadow:inset 0 0 0 3px #3fa58f,inset 0 0 0 4px rgba(191,230,214,.5),0 0 30px rgba(63,165,143,.35);color:var(--mint)}
+#dlg.nar{justify-content:center;text-align:center;font-style:italic}
+#dAv{order:2;flex:0 0 132px;height:132px;border-radius:0;overflow:visible;background:transparent;box-shadow:none;align-self:flex-end}
+#dAv img{width:100%;height:100%;object-fit:contain;object-position:bottom center;display:block}
+#dlg #dBody{order:1}
+@media(max-width:560px){#dAv{flex-basis:82px;height:96px}}
+#dlg.sys #dAv{background:#07211d;box-shadow:0 0 0 3px #3fa58f}
+#dAv svg{width:100%;height:100%;display:block}
+#dBody{flex:1;min-width:0}
+#dName{font-family:'Noto Serif Thai',serif;font-weight:800;color:var(--gold);font-size:1rem;margin-bottom:2px}
+#dlg.sys #dName{color:#7fe3c6}
+#dText{font-size:1.1rem;line-height:1.6}
+#dNext{text-align:right;font-size:.82rem;opacity:.7;animation:blink 1.2s steps(2) infinite}
+@media (max-width:560px){#dAv{flex-basis:82px;height:96px}#dText{font-size:1rem}}
+
+/* ---------- modal ---------- */
+#modal{position:fixed;inset:0;z-index:40;background:rgba(15,8,4,.66);display:grid;place-items:center;padding:12px;overflow:auto}
+#modalCard{width:min(680px,100%);max-height:96vh;overflow:auto}
+#modalCard h2{font-size:1.35rem;color:var(--gold);margin-bottom:10px}
+#modalCard p{line-height:1.65;margin:8px 0}
+.mini{display:grid;place-items:center;background:rgba(0,0,0,.22);padding:10px;margin:8px 0 12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:16px}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;padding:12px 14px;background:#4a2c1b;box-shadow:inset 0 0 0 2px #7a4026;--cut:5px;line-height:1.45}
+.opt:hover:not([disabled]){background:#5c3822}
+.opt[disabled]{opacity:.5;text-decoration:line-through;cursor:not-allowed}
+.opt.good{background:#2f5a3a;box-shadow:inset 0 0 0 2px #7bd08a;text-decoration:none;opacity:1}
+.note{background:rgba(0,0,0,.25);padding:10px 14px;border-left:4px solid var(--gold);line-height:1.55;margin:10px 0}
+.note.sysn{border-color:#3fa58f;color:var(--mint)}
+.note.bad{border-color:#e0786f;color:#ffd6d2}
+.note.ok{border-color:#7bd08a;color:#d5f5d9}
+#huntsvg{width:100%;height:auto;display:block;background:radial-gradient(#b4905c,#8a6a3e);touch-action:manipulation}
+#huntsvg .rock{cursor:pointer}
+#huntsvg .rock.found .rk{stroke:#7bd08a;stroke-width:5}
+.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* ---------- notebook (palm-leaf manuscript) ---------- */
+#nb{position:fixed;top:0;right:0;bottom:0;width:min(440px,100vw);z-index:25;background:linear-gradient(#2a160d,#1d0f08);box-shadow:-10px 0 30px rgba(0,0,0,.5);transform:translateX(105%);transition:transform .3s;padding:max(16px,env(safe-area-inset-top)) 16px 16px;overflow:auto}
+#nb.open{transform:none}
+#nb h2{font-size:1.3rem;color:var(--gold);display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+#nb ul{list-style:none;padding:0;display:grid;gap:12px}
+.leaf{position:relative;display:flex;gap:12px;padding:12px 14px 12px 30px;color:var(--ink);background:repeating-linear-gradient(90deg,#d8cf8c 0 3px,#cfc57f 3px 5px);border-radius:6px 22px 22px 6px;opacity:.6}
+.leaf::before{content:"";position:absolute;left:10px;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:50%;background:#2a160d}
+.leaf.got{opacity:1;box-shadow:0 3px 0 var(--leaf-d)}
+.leaf b{flex:0 0 42px;height:42px;display:grid;place-items:center;font-family:'Noto Serif Thai',serif;font-size:1.5rem;background:var(--lat);color:#f7e2c2;border-radius:50%}
+.leaf h4{font-size:1rem;margin-bottom:2px}
+.leaf p{font-size:.93rem;line-height:1.5}
+.leaf .chk{margin-left:auto;align-self:center;font-weight:800;font-size:1.4rem;color:#2f6b3a}
+
+#toast{position:fixed;left:50%;top:78px;transform:translate(-50%,-20px);z-index:35;background:var(--moss);color:#fff;padding:10px 18px;font-weight:700;opacity:0;pointer-events:none;transition:.35s;max-width:92vw;text-align:center;--cut:6px}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#fade{position:fixed;inset:0;background:#1b0f09;opacity:0;pointer-events:none;transition:opacity .35s;z-index:60}
+#fade.on{opacity:1}
+#alarm{position:fixed;inset:0;z-index:45;pointer-events:none;display:grid;place-items:center;animation:redflash .5s steps(2) infinite;background:rgba(224,51,43,.0);box-shadow:inset 0 0 160px 40px rgba(224,51,43,.9)}
+#alarm div{font-family:'Noto Serif Thai',serif;font-weight:800;font-size:clamp(2rem,9vw,4.5rem);color:#fff;text-shadow:0 0 20px #e0332b,0 4px 0 #6b0d08;background:rgba(40,0,0,.55);padding:.3em .8em}
+@keyframes redflash{50%{background:rgba(224,51,43,.28)}}
+
+/* ---------- title ---------- */
+#title{position:fixed;inset:0;z-index:55;display:grid;place-items:center;padding:16px;overflow:auto;background:linear-gradient(#1f120b,#3a1f12 60%,#2a160d)}
+#title svg.tbg{position:absolute;inset:auto 0 0 0;width:100%;height:56%;opacity:.55}
+.tbox{position:relative;width:min(560px,100%);text-align:center}
+.tbox h1{font-size:clamp(2.1rem,8vw,3.6rem);line-height:1.15;font-weight:800;color:var(--paper)}
+.tbox h1 small{display:block;font-size:.42em;color:var(--gold);font-weight:600;letter-spacing:.04em;margin-bottom:.4em}
+.tbox p{margin:14px auto 18px;line-height:1.65;color:#e5d6b8}
+.tbox input{width:100%;font:inherit;font-size:1.1rem;padding:12px 14px;background:#f1e6cf;color:var(--ink);border:0;margin-bottom:12px;--cut:6px}
+.tbox .btn{width:100%;font-size:1.15rem}
+.tbox .tiny{font-size:.86rem;opacity:.8}
+.linkbtn{color:#d9c79f;text-decoration:underline;font-size:.88rem;margin-top:12px}
+
+/* ---------- quiz ---------- */
+#quiz{position:fixed;inset:0;z-index:30;background:rgba(15,8,4,.62);display:grid;place-items:center;padding:10px;overflow:auto}
+.qwrap{width:min(780px,100%);max-height:98vh;overflow:auto}
+.qcard{padding:22px 24px}
+.qhead{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.qav{flex:0 0 72px;height:78px;overflow:hidden;background:transparent;box-shadow:none}
+.qav img{width:100%;height:100%;object-fit:contain}.qav svg{width:100%;height:100%;display:block}
+.qwho{font-weight:700;line-height:1.25}.qwho small{display:block;font-weight:400;opacity:.8}
+.qscore{margin-left:auto;background:var(--lat-dd);padding:4px 12px;border-radius:99px;font-weight:700;color:var(--gold);white-space:nowrap}
+.qtext{font-family:'Noto Serif Thai',serif;font-weight:600;font-size:1.2rem;line-height:1.6;margin:6px 0 10px}
+.hintbox{margin:10px 0;padding:10px 14px;background:rgba(191,230,214,.1);border-left:4px solid #3fa58f;color:var(--mint);line-height:1.5}
+.hintbox li{margin-left:1.1em}
+.qfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:.92rem}
+.hostbar{margin-top:10px;padding:14px 18px;background:#1d0f08;box-shadow:inset 0 0 0 2px #5b3320;--cut:6px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:2px 10px;border-radius:99px;background:#3b2316;font-size:.88rem}
+.chip.ok{background:#2f5a3a}
+.wall{display:grid;gap:8px;margin:10px 0;max-height:34vh;overflow:auto}
+.wall blockquote{background:#4a2c1b;padding:10px 14px;line-height:1.5;border-left:4px solid var(--gold)}
+.wall blockquote cite{display:block;font-size:.84rem;opacity:.75;margin-top:4px;font-style:normal}
+textarea{width:100%;min-height:120px;font:inherit;font-size:1.05rem;padding:12px;background:#f1e6cf;color:var(--ink);border:0;resize:vertical;--cut:6px}
+table.board{width:100%;border-collapse:collapse;margin:8px 0}
+table.board th,table.board td{padding:7px 8px;text-align:left;border-bottom:1px solid #5b3320}
+table.board th{color:var(--gold);font-size:.9rem}
+
+/* ---------- join (phone) ---------- */
+#joinApp{position:fixed;inset:0;z-index:56;background:linear-gradient(#1f120b,#3a1f12);overflow:auto;padding:14px}
+.jwrap{width:min(560px,100%);margin:0 auto}
+.jwrap h1{font-size:1.5rem;margin:10px 0 6px}
+.jwrap input{width:100%;font:inherit;font-size:1.1rem;padding:12px;background:#f1e6cf;color:var(--ink);border:0;margin:10px 0;--cut:6px}
+.qr{display:inline-block;padding:10px;background:#f1e6cf}
+.qr img,.qr canvas{display:block}
+.codebig{font-family:'Noto Serif Thai',serif;font-weight:800;font-size:2rem;letter-spacing:.12em;color:var(--gold)}
+
+#arrow{position:fixed;z-index:22;width:170px;text-align:center;pointer-events:none;animation:arrowb .8s ease-in-out infinite alternate}
+#arrow svg{display:block;margin:0 auto}
+#arrow span{display:inline-block;background:var(--gold);color:var(--lat-dd);font-weight:700;padding:3px 10px;font-size:.9rem;--cut:4px}
+@keyframes arrowb{to{transform:translateY(10px)}}
+.num{position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:var(--gold);color:var(--lat-dd);font:800 18px/34px 'Noto Serif Thai',serif;text-align:center;font-style:normal;box-shadow:0 0 0 3px var(--lat-dd),0 0 0 6px rgba(226,176,74,.6);animation:pulse 1.6s ease-in-out infinite;pointer-events:none}
+.hs.done .num{background:var(--moss);color:#fff;animation:none}
+.vals{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:10px 0}
+@media(max-width:560px){.vals{grid-template-columns:1fr}}
+.val{background:#4a2c1b;padding:12px 14px;border-top:4px solid var(--gold)}
+.val:nth-child(2){border-color:#d99b5b}.val:nth-child(3){border-color:#b8693f}.val:nth-child(4){border-color:#3fa58f}
+.val h4{font-family:'Noto Serif Thai',serif;margin:6px 0;font-size:1rem}
+.val ul{padding-left:1.1em;line-height:1.55;font-size:.93rem}
+.vic{width:44px;height:44px}.vic svg{width:100%;height:100%}
+.tblwrap{overflow-x:auto}
+table.board small{display:block;opacity:.75;font-size:.74rem}
+table.board td,table.board th{text-align:center}table.board td:nth-child(2),table.board th:nth-child(2){text-align:left}
+.aspects{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.aspects span{background:#3b2316;box-shadow:inset 0 0 0 1px #7a4026;padding:2px 10px;border-radius:99px;font-size:.9rem}
+.rub{font-size:.85rem;opacity:.85;line-height:1.5}
+.igrid{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
+@media(max-width:520px){.igrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div id="stage"><div id="world"></div></div>
+
+<div id="hud" hidden>
+  <div id="loc" class="step"><b id="locName"></b><span id="obj"></span></div>
+  <div id="hudR">
+    <button id="nbBtn" class="step" type="button" aria-label="เปิดสมุดบันทึก">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M4 10h16M4 15h16M4 20h10"/></svg>
+      สมุดบันทึก <em id="nbCount">0/4</em>
+    </button>
+    <div id="beacon" class="step" hidden><i></i>บอสมาแล้ว</div>
+  </div>
+</div>
+
+<div id="dlg" class="step" hidden role="dialog" aria-live="polite">
+  <div id="dAv"></div>
+  <div id="dBody"><div id="dName"></div><p id="dText"></p><div id="dNext">แตะเพื่อไปต่อ</div></div>
+</div>
+
+<div id="modal" hidden><div id="modalCard" class="card step"></div></div>
+
+<aside id="nb" aria-label="สมุดบันทึก">
+  <h2>สมุดบันทึก <button id="nbClose" class="btn ghost" type="button">ปิด</button></h2>
+  <ul id="nbList"></ul>
+</aside>
+
+<div id="arrow" hidden><svg width="40" height="46" viewBox="0 0 40 46"><path d="M20 2 L38 24 H26 V44 H14 V24 H2Z" fill="#e2b04a" stroke="#2b160d" stroke-width="3"/></svg><span>สมุดบันทึกอยู่ตรงนี้!</span></div>
+<div id="toast" class="step" role="status"></div>
+<div id="fade"></div>
+<div id="alarm" hidden><div class="step">บอสมาแล้ว!</div></div>
+<section id="quiz" hidden></section>
+
+<section id="title">
+  <svg class="tbg" viewBox="0 0 800 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <g fill="#6b3420">
+      <rect x="250" y="250" width="300" height="50"/><rect x="290" y="215" width="220" height="40"/><rect x="320" y="180" width="160" height="40"/>
+      <path d="M345 180 L360 120 L440 120 L455 180Z"/><path d="M370 120 L382 80 L418 80 L430 120Z"/><path d="M388 80 C388 55 396 45 400 20 C404 45 412 55 412 80Z"/>
+    </g>
+    <g stroke="#8f4a2c" stroke-width="3" fill="none" opacity=".7">
+      <path d="M0 270H800M0 280H800M0 290H800" /><path d="M0 262H800" opacity=".5"/>
+    </g>
+  </svg>
+  <div class="tbox">
+    <h1><small>เกมสำรวจโบราณสถาน</small>ถอดรหัสลับ<br>ปราสาทเมืองสิงห์</h1>
+    <p>ก้าวเข้าสู่ปราสาทขอมริมแม่น้ำแควน้อย เก็บข้อมูลลงสมุด แล้วไปแข่งตอบคำถามกับเพื่อนในห้อง</p>
+    <form id="nameForm">
+      <label for="nameIn" class="tiny">ตั้งชื่อตัวละครของคุณ</label>
+      <input id="nameIn" maxlength="16" placeholder="เช่น น้องฟ้า" autocomplete="off">
+      <button class="btn step" type="submit">เริ่มการสำรวจ</button>
+    </form>
+    <p class="tiny">ผู้เปิดเกมบนจอหลักคือผู้คุมจอ เพื่อนในห้องเข้าร่วมได้ตอนช่วงตอบคำถาม</p>
+    <button id="skipBtn" class="linkbtn" type="button">ข้ามไปช่วงแข่งขัน (สำหรับทดสอบ)</button>
+  </div>
+</section>
+
+<section id="joinApp" hidden></section>
+
+<script>
+'use strict';
+/* =====================================================================
+   ถอดรหัสลับ ปราสาทเมืองสิงห์ — เกมสำรวจเชิงประวัติศาสตร์
+   ===================================================================== */
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const W=1280,H=540,BAND=[370,450];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const mulberry=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const shuffle=(arr,r=Math.random)=>{const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* ---------------- ข้อมูลเนื้อหา ---------------- */
+const NB={
+ a:{l:'ก',t:'ประวัติความเป็นมา',x:'สร้างราวพุทธศตวรรษที่ 18 สมัยพระเจ้าชัยวรมันที่ 7 แห่งอาณาจักรขอม เป็นศูนย์กลางทางศาสนาทางทิศตะวันตกสุดของอาณาจักร เชื่อมเส้นทางการค้าและวัฒนธรรมริมแม่น้ำแควน้อย'},
+ b:{l:'ข',t:'แผนผังเมืองและสถาปัตยกรรม',x:'ผังปราสาทจำลองจักรวาล • ปรางค์ประธาน = เขาพระสุเมรุ • ซุ้มโคปุระ 4 ทิศ = ทางเข้าพื้นที่ศักดิ์สิทธิ์ • คูน้ำคันดิน = มหาสมุทรสีทันดร (และกักเก็บน้ำ) • ทำเลริมแควน้อย: เส้นทางคมนาคมและการค้า แหล่งน้ำ จุดยุทธศาสตร์การปกครองและเผยแผ่ศาสนา'},
+ c:{l:'ค',t:'วัสดุที่ใช้ก่อสร้าง',x:'ศิลาแลง: หาง่ายในพื้นที่ ตัดง่ายตอนยังชื้นนิ่ม แข็งเมื่อโดนอากาศ ใช้ก่อโครงสร้างหลัก แต่ไม่เหมาะแกะสลัก • หินทราย: เนื้อละเอียด เหมาะทำรูปเคารพ'},
+ d:{l:'ง',t:'คติความเชื่อและศิลปกรรมทางศาสนา',x:'ศิลปะแบบบายน พบพระพุทธรูปนาคปรก พระโพธิสัตว์อวโลกิเตศวร และนางปรัชญาปารมิตา เรียกรวมว่า “รัตนตรัยมหายาน” — สะท้อนพุทธศาสนานิกายมหายานและการเผยแผ่ศาสนา'}
+};
+const EXT={
+ prang:{t:'ปรางค์ประธาน',x:'ปรางค์องค์ใหญ่ตั้งอยู่ตรงกลางปราสาท สูงเด่นกว่าทุกส่วน'},
+ gopura:{t:'ซุ้มประตูโคปุระ',x:'ซุ้มประตูทางเข้าบนแนวกำแพงศิลาแลง ปราสาทมีซุ้มประตูแบบนี้ครบทั้ง 4 ทิศ'},
+ moat:{t:'คูน้ำคันดินล้อมรอบ',x:'คูน้ำและคันดินหลายชั้น (7 ชั้น) ล้อมรอบพื้นที่ปราสาทและตัวเมือง'},
+ river:{t:'ลุ่มแม่น้ำแควน้อย',x:'แม่น้ำสายสำคัญที่ไหลผ่านบริเวณนี้ ปราสาทตั้งอยู่ริมลุ่มน้ำนี้ เป็นเมืองหน้าด่านทิศตะวันตกสุดของอาณาจักรขอม'}
+};
+const HSNUM={prang:1,gopura:2,moat:3,river:4};
+const ST={
+ naga:{t:'พระพุทธรูปนาคปรก',x:'พระพุทธรูปประทับนั่ง มีพญานาคแผ่พังพานปกคลุมเหนือพระเศียร'},
+ avalo:{t:'พระโพธิสัตว์อวโลกิเตศวร',x:'พระโพธิสัตว์ผู้เปี่ยมด้วยพระกรุณา เป็นที่เคารพสำคัญในพุทธศาสนานิกายมหายาน'},
+ praj:{t:'นางปรัชญาปารมิตา',x:'เทวีผู้เป็นตัวแทนแห่งปัญญาอันสูงสุด ปรากฏในความเชื่อของพุทธศาสนานิกายมหายาน'}
+};
+const Q=[
+ {who:"laks",whoName:"พี่ลักษ์",
+  text:"ปราสาทเมืองสิงห์สร้างขึ้นในยุคสมัยใด และในรัชสมัยของกษัตริย์พระองค์ใด",
+  c:["พุทธศตวรรษที่ 16 สมัยพระเจ้าสุริยวรมันที่ 1", "พุทธศตวรรษที่ 17 สมัยพระเจ้าสุริยวรมันที่ 2", "พุทธศตวรรษที่ 18 สมัยพระเจ้าชัยวรมันที่ 7", "พุทธศตวรรษที่ 19 พ่อขุนรามคำแหงมหาราช"],a:2,
+  h:["ย้อนไปดูที่อาจารย์นิวบรรยายตอนต้นเกม"],
+  exp:"ปราสาทเมืองสิงห์สร้างราวพุทธศตวรรษที่ 18 สมัยพระเจ้าชัยวรมันที่ 7 แห่งอาณาจักรขอม"},
+ {who:"pan",whoName:"อาจารย์แพน",
+  text:"หินทรายมีคุณสมบัติข้อใดที่ทำให้เหมาะสำหรับนำมาแกะสลักรูปเคารพมากกว่าศิลาแลง?",
+  c:["มีเนื้อละเอียด ไม่แข็งเกินไป และไม่เปราะแตกง่าย", "มีน้ำหนักมากและสามารถรับน้ำหนักของอาคารได้ดี", "ตัดแต่งได้ง่ายและแข็งตัวทันทีเมื่อสัมผัสอากาศ", "มีพื้นผิวพรุนและสามารถแตกหักได้ง่ายเมื่อต้องการขึ้นรูป"],a:0,
+  h:["ลองนึกถึงคุณสมบัติที่ตรงข้ามกับข้อจำกัดของศิลาแลง โดยเฉพาะเรื่องความแข็งและการแตกหัก"],
+  exp:"หินทรายมีเนื้อละเอียด ไม่แข็งเกินไปและไม่เปราะแตกง่าย จึงแกะสลักรูปเคารพได้ดี ส่วนศิลาแลงใช้ง่ายและแข็งเร็วแต่ไม่เหมาะแกะสลัก"},
+ {who:"new",whoName:"อาจารย์นิว",
+  text:"ปราสาทเมืองสิงห์มีปรางค์ประธานอยู่ตรงกลาง มีประตูเข้าออก 4 ทิศทาง และมีแนวกำแพงล้อมรอบ หากพิจารณาจากองค์ประกอบเหล่านี้ นักเรียนคิดว่าการออกแบบดังกล่าวสะท้อนแนวคิดใด?",
+  c:["การออกแบบเพื่อให้สามารถมองเห็นเมืองได้จากทุกทิศทาง", "การออกแบบเพื่อแบ่งพื้นที่อยู่อาศัยตามชนชั้นของผู้คน", "การจำลองจักรวาลตามคติความเชื่อทางศาสนา", "การออกแบบเพื่อให้สามารถเดินทางออกจากเมืองได้สะดวกขึ้น"],a:2,
+  h:["ลองพิจารณาความหมายเชิงสัญลักษณ์ของปรางค์ประธานที่เปรียบเสมือนเขาสุเมรุ"],
+  exp:"ผังปราสาทจำลองจักรวาลตามคติความเชื่อทางศาสนา — ปรางค์ประธานคือเขาพระสุเมรุ คูน้ำคันดินและกำแพงล้อมรอบ และซุ้มโคปุระ 4 ทิศเป็นทางเข้าสู่ศูนย์กลาง"},
+ {who:"new",whoName:"อาจารย์นิว",
+  text:"จากการค้นพบพระพุทธรูปนาคปรก พระโพธิสัตว์อวโลกิเตศวร และนางปรัชญาปารมิตาภายในปราสาทเมืองสิงห์ นักเรียนสามารถวิเคราะห์ข้อใดได้เหมาะสมที่สุด?",
+  c:["ปราสาทเมืองสิงห์สร้างขึ้นเพื่อเป็นศูนย์กลางของศาสนาพราหมณ์", "ปราสาทเมืองสิงห์เป็นสถานที่ประกอบพิธีกรรมของกษัตริย์เท่านั้น", "ปราสาทเมืองสิงห์สะท้อนความเชื่อในพระพุทธศาสนาลัทธิมหายาน", "ปราสาทเมืองสิงห์เป็นสถานที่รวบรวมรูปเคารพจากทุกศาสนา"],a:2,
+  h:["รูปเคารพทั้งสามองค์มีความเกี่ยวข้องกับพระพุทธศาสนานิกายใด?"],
+  exp:"รูปเคารพทั้งสามเป็นหลักฐานว่าปราสาทเมืองสิงห์สะท้อนความเชื่อในพระพุทธศาสนาลัทธิมหายาน ตามศิลปะแบบบายน"},
+ {who:"new",whoName:"อาจารย์นิว",
+  text:"ปราสาทเมืองสิงห์ตั้งอยู่บริเวณลุ่มแม่น้ำแควน้อย และเป็นศูนย์กลางทางศาสนาทางทิศตะวันตกสุดของอาณาจักรขอม จากข้อมูลนี้ นักเรียนคิดว่าทำเลที่ตั้งดังกล่าวส่งผลต่อบทบาทของปราสาทอย่างไร?",
+  c:["เป็นสถานที่สำหรับป้องกันการรุกรานจากอาณาจักรอื่นเพียงอย่างเดียว", "เป็นจุดเชื่อมโยงการเผยแผ่ศาสนา การค้า และวัฒนธรรม", "เป็นศูนย์กลางการผลิตวัสดุก่อสร้างเพื่อส่งไปยังเมืองอื่น", "เป็นสถานที่สำหรับประกอบพิธีกรรมของกษัตริย์ขอมเท่านั้น"],a:1,
+  h:["ลองพิจารณาว่าเส้นทางแม่น้ำมีความสำคัญต่อการเดินทางและติดต่อระหว่างผู้คนอย่างไร"],
+  exp:"ทำเลริมแม่น้ำแควน้อยทางตะวันตกสุดของอาณาจักร ทำให้ปราสาทเป็นจุดเชื่อมโยงการเผยแผ่ศาสนา การค้า และวัฒนธรรม"}
+];
+const REFLECT_Q='ปราสาทเมืองสิงห์ สะท้อนคุณค่าในด้านใดบ้าง?';
+
+/* ---------------- ตัวละคร ---------------- */
+const CH={
+ me:{n:'',skin:'#e8b98f',hair:'#1d1410',top:'#f3efe6',bottom:'#1f2f55',extra:'pack'},
+ new:{n:'อาจารย์นิว',skin:'#f0c29b',hair:'#24150f',top:'#2f7f73',bottom:'#4a3a33',extra:'bun'},
+ pan:{n:'อาจารย์แพน',skin:'#d9a67c',hair:'#2d2118',top:'#d6a23a',bottom:'#3b4a3a',extra:'glasses'},
+ laks:{n:'พี่ลักษ์',skin:'#c98f66',hair:'#1b130d',top:'#d2683a',bottom:'#35302b',extra:'cap'}
+};
+function sprite(c,bust){
+  const bun=c.extra==='bun'?`<circle cx="30" cy="9" r="7" fill="${c.hair}"/>`:'';
+  const cap=c.extra==='cap'?`<path d="M14 25a16 16 0 0 1 32 0z" fill="#c24a2b"/><path d="M40 24h14a2 2 0 0 1 0 4H40z" fill="#8f3820"/>`:'';
+  const gl=c.extra==='glasses'?`<g fill="none" stroke="#222" stroke-width="1.6"><circle cx="24" cy="29" r="5"/><circle cx="36" cy="29" r="5"/><path d="M29 29h2"/></g>`:'';
+  const pack=c.extra==='pack'?`<rect x="9" y="46" width="14" height="30" rx="5" fill="#5b3b24"/>`:'';
+  const hair=c.extra==='cap'?'':`<path d="M14.5 28a15.5 15.5 0 0 1 31 0c-4-8-10-10-15.5-10s-11.5 2-15.5 10z" fill="${c.hair}"/>`;
+  const legs=bust?'':`<g class="lg l"><rect x="19" y="80" width="10" height="32" rx="4" fill="${c.bottom}"/><ellipse cx="23" cy="113" rx="9" ry="4" fill="#1a1210"/></g>
+   <g class="lg r"><rect x="31" y="80" width="10" height="32" rx="4" fill="${c.bottom}"/><ellipse cx="37" cy="113" rx="9" ry="4" fill="#1a1210"/></g>`;
+  return `<svg viewBox="${bust?'6 2 48 54':'0 0 60 120'}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${pack}${legs}
+  <rect x="16" y="44" width="28" height="40" rx="9" fill="${c.top}"/>
+  <rect x="9" y="48" width="9" height="30" rx="4" fill="${c.top}"/><rect x="42" y="48" width="9" height="30" rx="4" fill="${c.top}"/>
+  <circle cx="9" cy="79" r="4.5" fill="${c.skin}"/><circle cx="51" cy="79" r="4.5" fill="${c.skin}"/>
+  <rect x="26" y="38" width="8" height="8" fill="${c.skin}"/>
+  ${bun}<circle cx="30" cy="28" r="15" fill="${c.skin}"/>${hair}${cap}
+  <circle cx="24.5" cy="30" r="1.8" fill="#2a1a10"/><circle cx="35.5" cy="30" r="1.8" fill="#2a1a10"/>${gl}
+  <path d="M25 36q5 4 10 0" stroke="#7a3b25" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>`;
+}
+const SYS_AV=`<svg viewBox="0 0 80 80" aria-hidden="true"><polygon points="40,6 70,23 70,57 40,74 10,57 10,23" fill="#0b3a33" stroke="#3fa58f" stroke-width="3"/><circle cx="40" cy="40" r="13" fill="none" stroke="#7fe3c6" stroke-width="3"/><circle cx="40" cy="40" r="5" fill="#bfe6d6"/><path d="M40 6v14M40 60v14M10 23l12 7M70 23l-12 7M10 57l12-7M70 57l-12-7" stroke="#3fa58f" stroke-width="2"/></svg>`;
+const PORTRAITS={laks:'LUK_01.png',pan:'PAN_02.png',new:'NEW_03.png'};
+function avatarHTML(key){ if(key==='sys')return SYS_AV; if(key==='me')return ''; return `<img src="${PORTRAITS[key]}" alt="${esc(CH[key].n)}">`; }
+function nameOf(key){ return key==='sys'?'ระบบ AI “ลับ”':key==='me'?G.name:CH[key].n; }
+
+/* ---------------- สถานะเกม ---------------- */
+const G={name:'ผู้เล่น',scene:'S1',items:{a:0,b:0,c:0,d:0},
+  f:{talk:0,sys:0,ext:{},st:{},stumbled:0,obs:0,s2:0,s3:0,s4:0},quizOn:0};
+const P={x:150,y:410,tx:150,ty:410,moving:false,pending:null,face:1,el:null,lock:0};
+let S=1,offY=0,camX=0,VW=innerWidth,VH=innerHeight,fading=false,cur=null;
+const world=$('#world');
+
+function resize(){VW=innerWidth;VH=innerHeight;S=Math.max(VW/W,VH/H*0.8);offY=VH-H*S;}
+addEventListener('resize',resize);resize();
+function toWorld(cx,cy){return [(cx+camX)/S,(cy-offY)/S];}
+
+/* ---------------- SVG ฉากหลัง ---------------- */
+function tree(x,y,s=1,c='#4d7a45'){return `<g transform="translate(${x} ${y}) scale(${s})"><rect x="-4" y="-30" width="8" height="32" fill="#4a3220"/><circle cx="0" cy="-50" r="26" fill="${c}"/><circle cx="-17" cy="-36" r="18" fill="${c}"/><circle cx="17" cy="-38" r="19" fill="${c}"/></g>`;}
+function prangSVG(x,y,s=1,o=1){return `<g transform="translate(${x} ${y}) scale(${s})" opacity="${o}">
+ <rect x="-112" y="-26" width="224" height="26" fill="#6e3720"/><rect x="-92" y="-60" width="184" height="34" fill="#82432a"/><rect x="-74" y="-98" width="148" height="38" fill="#93502f"/>
+ <path d="M-56 -98 L-46 -148 L46 -148 L56 -98Z" fill="#a05a37"/><path d="M-42 -148 L-34 -188 L34 -188 L42 -148Z" fill="#ab643f"/><path d="M-29 -188 L-22 -220 L22 -220 L29 -188Z" fill="#b66f47"/>
+ <path d="M-19 -220 C-19 -248 -7 -260 0 -284 C7 -260 19 -248 19 -220Z" fill="#c27b50"/>
+ <path d="M-15 -98 v-34 a15 15 0 0 1 30 0 v34z" fill="#26130b"/>
+ <g stroke="#5e2d19" stroke-width="2" opacity=".55"><path d="M-30 -148V-190M30 -148V-190M-20 -190V-222M20 -190V-222M-8 -222V-250M8 -222V-250"/><path d="M-72 -80H72M-90 -44H90"/></g>
+ <path d="M0 -284 C7 -260 19 -248 19 -220 L22 -220 L29 -188 L34 -188 L42 -148 L46 -148 L56 -98 L74 -98 L74 -60 L92 -60 L92 -26 L112 -26 V0 H0Z" fill="#000" opacity=".13"/></g>`;}
+function gopuraSVG(x,y,s=1){return `<g transform="translate(${x} ${y}) scale(${s})">
+ <rect x="-92" y="-118" width="184" height="118" fill="#8f4a2c"/><path d="M-112 -118 L-72 -150 L72 -150 L112 -118Z" fill="#7a3d24"/>
+ <path d="M-82 -150 L-52 -180 L52 -180 L82 -150Z" fill="#8f4a2c"/><path d="M-52 -180 L-30 -208 L30 -208 L52 -180Z" fill="#a05a37"/><path d="M-9 -208 L0 -238 L9 -208Z" fill="#b66f47"/>
+ <path d="M-32 0 V-70 a32 32 0 0 1 64 0 V0Z" fill="#1a0d07"/>
+ <rect x="-92" y="-118" width="30" height="118" fill="#000" opacity=".1"/>
+ <g stroke="#5e2d19" stroke-width="2" opacity=".5"><path d="M-92 -90H-40M40 -90H92M-92 -60H-40M40 -60H92M-92 -30H-40M40 -30H92"/></g></g>`;}
+function skyDefs(){return `<defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fc9bd"/><stop offset=".72" stop-color="#f3dfac"/><stop offset="1" stop-color="#f6c98a"/></linearGradient>
+ <linearGradient id="gr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c3a26b"/><stop offset="1" stop-color="#8f6e3f"/></linearGradient></defs>
+ <rect x="-1200" y="-900" width="3680" height="900" fill="#8fc9bd"/><rect x="-1200" y="0" width="3680" height="320" fill="url(#sk)"/>
+ <circle cx="170" cy="215" r="48" fill="#fff3c4" opacity=".92"/><g fill="#fff" opacity=".7"><ellipse cx="520" cy="90" rx="90" ry="20"/><ellipse cx="580" cy="76" rx="60" ry="16"/><ellipse cx="1040" cy="130" rx="100" ry="20"/><ellipse cx="300" cy="150" rx="70" ry="14"/></g>`;}
+function grass(seed,y0,y1,n){const r=mulberry(seed);let s='';for(let i=0;i<n;i++){const x=r()*1280,y=y0+r()*(y1-y0);s+=`<path d="M${x} ${y}l-4 -9M${x} ${y}l1 -11M${x} ${y}l5 -8" stroke="#6f8a47" stroke-width="2" fill="none" opacity=".8"/>`;}return s;}
+function ground(y){return `<rect x="-1200" y="${y}" width="3680" height="${H+400-y}" fill="url(#gr)"/><path d="M-100 ${y+95} Q300 ${y+55} 700 ${y+80} T1400 ${y+62} V${y+120} Q900 ${y+140} 500 ${y+128} T-100 ${y+150}Z" fill="#d6ba84" opacity=".55"/>`+grass(7,y+8,H-4,70);}
+
+function svgS1(){return `<svg class="bg" viewBox="0 0 1280 540">${skyDefs()}
+ <path d="M-100 270 Q200 205 460 255 T900 238 T1400 258 V320 H-100Z" fill="#6f9a73" opacity=".85"/>
+ <path d="M-100 295 Q300 250 640 285 T1400 275 V320 H-100Z" fill="#5a8760"/>
+ <rect x="860" y="268" width="520" height="34" fill="#7a4a30" opacity=".8"/>${prangSVG(1010,302,.42,.82)}${prangSVG(1190,302,.26,.8)}
+ ${tree(60,305,.9,'#44703f')}${tree(430,300,.8,'#527f48')}${tree(640,306,1,'#3f6b3a')}${tree(820,300,.7,'#4d7a45')}
+ ${ground(300)}
+ <g transform="translate(360 0)"><rect x="228" y="352" width="8" height="64" fill="#4a3220"/><rect x="332" y="352" width="8" height="64" fill="#4a3220"/><rect x="200" y="322" width="168" height="54" rx="4" fill="#6e3720" stroke="#e2b04a" stroke-width="3"/>
+ <text x="284" y="347" text-anchor="middle" font-family="Noto Serif Thai,serif" font-size="17" font-weight="800" fill="#f3dfac">ปราสาทเมืองสิงห์</text><text x="284" y="367" text-anchor="middle" font-family="Sarabun,sans-serif" font-size="13" fill="#e2c88f">จังหวัดกาญจนบุรี</text></g>
+ </svg>`;}
+
+function svgS2(){
+  let bands='';const y0=285,h=10;
+  for(let i=0;i<7;i++){bands+=`<rect x="-1200" y="${y0+i*h}" width="3680" height="${h}" fill="${i%2?'#8d7343':'#3f8a7a'}"/>`;if(i%2===0)bands+=`<path d="M0 ${y0+i*h+5}q20 -4 40 0t40 0t40 0" stroke="#bfe6d6" stroke-width="1.5" fill="none" opacity=".55" transform="translate(${(i*37)%80} 0)"/><path d="M400 ${y0+i*h+5}q20 -4 40 0t40 0t40 0M900 ${y0+i*h+5}q20 -4 40 0t40 0t40 0" stroke="#bfe6d6" stroke-width="1.5" fill="none" opacity=".45"/>`;}
+  return `<svg class="bg" viewBox="0 0 1280 540">${skyDefs()}
+ <path d="M-100 190 Q250 140 560 185 T1000 170 T1400 190 V250 H-100Z" fill="#6f9a73" opacity=".85"/>
+ <rect x="-100" y="178" width="620" height="30" fill="#2c6e62"/><path d="M0 188q30 -5 60 0t60 0t60 0t60 0t60 0t60 0t60 0t60 0" stroke="#bfe6d6" stroke-width="2" fill="none" opacity=".6"/>
+ <rect x="-100" y="160" width="620" height="20" fill="#5a8760" opacity=".7"/>${tree(80,178,.5,'#3f6b3a')}${tree(180,176,.45,'#4d7a45')}${tree(470,178,.5,'#44703f')}
+ <rect x="-1200" y="213" width="3680" height="72" fill="#7a3d24"/><g stroke="#5e2d19" stroke-width="2" opacity=".5"><path d="M-1200 233H2480M-1200 253H2480M-1200 273H2480"/></g>
+ <image href="castle.png" x="600" y="25" width="590" height="300" preserveAspectRatio="xMidYMid meet"/>
+ ${bands}
+ <rect x="344" y="285" width="72" height="72" fill="#c8a574"/><g stroke="#8f6e3f" stroke-width="2" opacity=".6"><path d="M344 303H416M344 321H416M344 339H416"/></g>
+ ${ground(355)}
+ <rect x="344" y="355" width="72" height="14" fill="#c8a574"/>
+ </svg>`;}
+
+function svgS3(){
+  const cxs=[330,640,950];
+  const niche=cxs.map((cx,i)=>`<path d="M${cx-105} 330 V150 a105 105 0 0 1 210 0 V330Z" fill="#150b06"/><ellipse cx="${cx}" cy="220" rx="110" ry="140" fill="url(#glow)"/><rect x="${cx-72}" y="298" width="144" height="34" fill="#7a6b58"/><rect x="${cx-72}" y="298" width="144" height="6" fill="#9b8c76"/>`+`<image href="${['s_1.png','s_2.png','s_3.png'][i]}" x="${cx-105}" y="45" width="210" height="255" preserveAspectRatio="xMidYMax meet"/>`).join('');
+  const pillars=[140,485,795,1140].map(x=>`<rect x="${x}" y="0" width="46" height="340" fill="#4a3426"/><rect x="${x+8}" y="0" width="8" height="340" fill="#6a4c37" opacity=".7"/><rect x="${x-6}" y="326" width="58" height="14" fill="#5d4533"/>`).join('');
+  return `<svg class="bg" viewBox="0 0 1280 540"><defs>
+  <linearGradient id="ss" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d8d1c3"/><stop offset=".55" stop-color="#b3ab9c"/><stop offset="1" stop-color="#8d8575"/></linearGradient>
+  <radialGradient id="glow"><stop offset="0" stop-color="#f3c570" stop-opacity=".55"/><stop offset="1" stop-color="#f3c570" stop-opacity="0"/></radialGradient>
+  <linearGradient id="wl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a1a12"/><stop offset="1" stop-color="#3f2c20"/></linearGradient>
+  <linearGradient id="fl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b4a3a"/><stop offset="1" stop-color="#3a2d22"/></linearGradient>
+  <linearGradient id="dr" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f0d79a" stop-opacity="0"/><stop offset="1" stop-color="#f6e2ae"/></linearGradient></defs>
+  <rect x="-1200" y="-900" width="3680" height="1240" fill="#2a1a12"/><rect x="-1200" y="0" width="3680" height="332" fill="url(#wl)"/>
+  <g stroke="#1b0f09" stroke-width="2" opacity=".5">${Array.from({length:8},(_,i)=>`<path d="M-1200 ${i*42}H2480"/>`).join('')}</g>
+  ${pillars}${niche}
+  <rect x="-1200" y="332" width="3680" height="600" fill="url(#fl)"/><g stroke="#2a1d14" stroke-width="2" opacity=".6"><path d="M0 372H1280M0 420H1280M0 480H1280"/></g>
+  <rect x="1190" y="110" width="90" height="222" fill="url(#dr)"/>
+  </svg>`;}
+
+function svgS4(){return `<svg class="bg" viewBox="0 0 1280 540">${skyDefs()}
+ <path d="M-100 250 Q250 190 560 240 T1000 225 T1400 248 V320 H-100Z" fill="#6f9a73" opacity=".85"/>
+ <rect x="-100" y="252" width="1500" height="60" fill="#2c6e62"/><rect x="-100" y="252" width="1500" height="12" fill="#3f8a7a"/>
+ <g stroke="#bfe6d6" stroke-width="2" fill="none" opacity=".55">${Array.from({length:14},(_,i)=>`<path d="M${i*100-20} ${270+(i%3)*12}q20 -5 40 0t40 0"/>`).join('')}</g>
+ <rect x="760" y="226" width="520" height="30" fill="#7a4a30"/>${prangSVG(960,256,.34,.9)}${prangSVG(1140,256,.22,.9)}
+ ${tree(50,255,.8,'#3f6b3a')}${tree(240,252,.7,'#527f48')}${tree(560,254,.75,'#44703f')}
+ <rect x="-1200" y="312" width="3680" height="600" fill="url(#gr)"/>
+ <path d="M-100 380 Q300 345 700 372 T1400 358 V420 Q900 440 500 428 T-100 450Z" fill="#d6ba84" opacity=".55"/>${grass(13,320,534,70)}
+ <g><rect x="60" y="378" width="8" height="50" fill="#4a3220"/><rect x="160" y="378" width="8" height="50" fill="#4a3220"/><rect x="40" y="352" width="148" height="44" rx="4" fill="#6e3720" stroke="#e2b04a" stroke-width="3"/>
+ <text x="114" y="380" text-anchor="middle" font-family="Noto Serif Thai,serif" font-size="16" font-weight="800" fill="#f3dfac">ทางออก</text></g>
+ </svg>`;}
+
+/* ---------------- นิยามฉาก ---------------- */
+const SC={
+ S1:{name:'ลานหน้าปราสาท',svg:svgS1,start:{l:[150,410]},npcs:()=>G.f.talk>=2?[]:[{id:'new',c:'new',x:300,y:408}],hs:()=>[],right:{label:'เข้าปราสาท ›'},left:null},
+ S2:{name:'จุดที่ 1–2 • ภายนอกปราสาท',svg:svgS2,npcs:()=>[],
+   hs:()=>{const a=[
+     {id:'river',x:20,y:160,w:300,h:56,sx:300,sy:380},
+     {id:'gopura',x:292,y:76,w:176,h:210,sx:380,sy:372},
+     {id:'prang',x:790,y:36,w:230,h:250,sx:900,sy:385},
+     {id:'moat',x:560,y:285,w:300,h:70,sx:640,sy:376}];
+     if(G.f.stumbled&&!G.items.c)a.push({id:'pile',x:1070,y:408,w:96,h:60,sx:1040,sy:430,pile:1});return a;},
+   right:{label:'ห้องรูปเคารพ ›'},left:{label:'‹ ลานหน้า'}},
+ S3:{name:'จุดที่ 3 • ห้องรูปเคารพ',svg:svgS3,npcs:()=>[],
+   hs:()=>[{id:'naga',x:225,y:45,w:210,h:285,sx:330,sy:380},{id:'avalo',x:535,y:45,w:210,h:285,sx:640,sy:380},{id:'praj',x:845,y:45,w:210,h:285,sx:950,sy:380}],
+   right:{label:'ทางออก ›'},left:{label:'‹ ภายนอก'}},
+ S4:{name:'ลานทางออก ริมแควน้อย',svg:svgS4,npcs:()=>[{id:'laks',c:'laks',x:650,y:405}],hs:()=>[],right:null,left:null}
+};
+
+function hsDone(id){
+  if(['prang','moat','gopura','river'].includes(id))return !!G.f.ext[id];
+  if(['naga','avalo','praj'].includes(id))return !!G.f.st[id];
+  if(id==='new')return G.f.talk>0; if(id==='pile')return !!G.items.c; return false;
+}
+const HSNAME={prang:'ปรางค์ประธาน',moat:'คูน้ำคันดิน',gopura:'ซุ้มโคปุระ',river:'แม่น้ำแควน้อย',pile:'ก้อนหินที่สะดุด',naga:'พระพุทธรูปนาคปรก',avalo:'พระโพธิสัตว์อวโลกิเตศวร',praj:'นางปรัชญาปารมิตา',new:'อาจารย์นิว',laks:'พี่ลักษ์'};
+
+function pileSVG(){return `<svg viewBox="0 0 96 60" width="96" height="60"><g fill="#a2492b" stroke="#5e2312" stroke-width="2"><path d="M8 52 L14 30 L34 24 L46 40 L40 56Z"/><path d="M40 56 L48 28 L70 24 L84 40 L76 56Z"/><path d="M28 30 L40 12 L60 14 L62 30 L46 38Z"/></g><g fill="#5e2312"><circle cx="20" cy="42" r="2"/><circle cx="30" cy="36" r="2"/><circle cx="58" cy="38" r="2"/><circle cx="68" cy="44" r="2"/><circle cx="46" cy="22" r="2"/></g></svg>`;}
+
+function renderHS(){
+  $$('.hs:not(.ent)',world).forEach(e=>e.remove());
+  cur.hsmap={};
+  for(const h of SC[G.scene].hs()){
+    cur.hsmap[h.id]=h;
+    const d=document.createElement('div');
+    d.className='hs'+(hsDone(h.id)?' done':'');d.dataset.hs=h.id;d.tabIndex=0;d.setAttribute('role','button');d.setAttribute('aria-label',HSNAME[h.id]);
+    d.style.cssText=`left:${h.x}px;top:${h.y}px;width:${h.w}px;height:${h.h}px`;
+    d.innerHTML=(h.pile?pileSVG():'')+(HSNUM[h.id]?`<i class="num">${HSNUM[h.id]}</i>`:'<i class="ping"></i>');
+    world.appendChild(d);
+  }
+  $$('.ent.hs',world).forEach(e=>e.classList.toggle('done',hsDone(e.dataset.hs)));
+}
+function entEl(id,c,x,y,label){
+  const d=document.createElement('div');d.className='ent';d.id='e_'+id;
+  d.innerHTML=`<div class="tag">${esc(label)}</div><div class="flip">${sprite(c)}</div>`;setPos(d,x,y);return d;
+}
+function setPos(d,x,y){const k=0.82+0.22*clamp((y-BAND[0])/(BAND[1]-BAND[0]),0,1);d.style.left=x+'px';d.style.top=y+'px';d.style.zIndex=Math.round(y);d.style.transform=`translate(-50%,-100%) scale(${k})`;}
+function npcEl(n){const e=entEl(n.id,CH[n.c],n.x,n.y,CH[n.c].n);if(n.id==='new'||n.id==='laks'){e.classList.add('hs');e.dataset.hs=n.id;e.tabIndex=0;e.setAttribute('role','button');e.setAttribute('aria-label',CH[n.c].n);e.style.cursor='pointer';e.insertAdjacentHTML('beforeend','<i class="ping"></i>');}return e;}
+
+function build(id,side){
+  G.scene=id;cur={hsmap:{}};
+  const s=SC[id];
+  world.innerHTML=s.svg();
+  if(s.right)world.insertAdjacentHTML('beforeend',`<div class="edge" style="right:14px;top:380px;z-index:7">${s.right.label}</div>`);
+  if(s.left)world.insertAdjacentHTML('beforeend',`<div class="edge l" style="left:14px;top:380px;z-index:7">${s.left.label}</div>`);
+  s.npcs().forEach(n=>world.appendChild(npcEl(n)));
+  P.x=side==='r'?W-120:side==='l'?120:(s.start?s.start.l[0]:150);P.y=410;P.tx=P.x;P.ty=P.y;P.moving=false;P.pending=null;P.lock=performance.now()+700;
+  P.el=entEl('me',CH.me,P.x,P.y,G.name);world.appendChild(P.el);
+  renderHS();camX=clamp(P.x*S-VW/2,0,Math.max(0,W*S-VW));applyCam();setObj();
+}
+function applyCam(){const max=Math.max(0,W*S-VW);const t=clamp(P.x*S-VW/2,0,max);camX+=(t-camX)*.12;if(Math.abs(t-camX)<.5)camX=t;world.style.transform=`translate(${-camX}px,${offY}px) scale(${S})`;}
+
+async function goScene(id,side,after){
+  fading=true;$('#fade').classList.add('on');await wait(380);
+  build(id,side);await wait(80);$('#fade').classList.remove('on');await wait(360);fading=false;
+  if(after)after();
+}
+
+/* ---------------- วัตถุประสงค์ / HUD ---------------- */
+function setObj(){
+  $('#locName').textContent=SC[G.scene].name;
+  const n=Object.values(G.items).filter(Boolean).length;$('#nbCount').textContent=n+'/4';
+  let t='';
+  if(G.scene==='S1')t=!G.f.talk?'คลิกที่อาจารย์นิวเพื่อพูดคุย':!G.f.sys?'ฟังอาจารย์บรรยาย…':'เดินไปทางขวาเพื่อเข้าปราสาท';
+  else if(G.scene==='S2'){const k=Object.keys(G.f.ext).length;t=k<4?`คลิกหมายเลข 1–4 รอบปราสาท (${k}/4)`:'';
+    if(!G.items.c)t+=(t?' • ':'')+(G.f.stumbled?'กลับมาหาหินที่สะดุด (กดที่รูปหิน)':'เดินต่อไปทางขวา');else if(!t)t='เดินต่อไปทางขวา';}
+  else if(G.scene==='S3'){const k=Object.keys(G.f.st).length;t=k<3?`คลิกรูปเคารพทั้ง 3 องค์ (${k}/3)`:(!G.items.d?'ตอบข้อสังเกตของระบบ':'เดินไปทางขวาเพื่อออกจากห้อง');}
+  else if(G.scene==='S4')t=G.quizOn?'ช่วงแข่งขันตอบคำถาม':'คุยกับพี่ลักษ์';
+  $('#obj').textContent=t;
+  $('#hud').hidden=$('#title').hidden===false&&false?true:false;
+}
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),3200);}
+function record(k){
+  if(G.items[k])return;G.items[k]=1;setObj();renderNB();
+  toast(`บันทึกลงสมุดแล้ว: ข้อ ${NB[k].l} ${NB[k].t}`);
+  const b=$('#nbBtn');b.classList.remove('pulse');void b.offsetWidth;b.classList.add('pulse');
+}
+function renderNB(){
+  $('#nbList').innerHTML=Object.entries(NB).map(([k,v])=>`<li class="leaf ${G.items[k]?'got':''}"><b>${v.l}</b><div><h4>${v.t}</h4><p>${G.items[k]?v.x:'ยังไม่มีข้อมูล — สำรวจเพื่อค้นหา'}</p></div>${G.items[k]?'<span class="chk">✓</span>':''}</li>`).join('');
+}
+let nbCb=null;
+function openNB(cb){renderNB();$('#nb').classList.add('open');nbCb=cb||null;}
+function closeNB(){$('#nb').classList.remove('open');const f=nbCb;nbCb=null;if(f)setTimeout(f,200);}
+$('#nbBtn').onclick=()=>$('#nb').classList.contains('open')?closeNB():openNB();
+$('#nbClose').onclick=closeNB;
+
+/* ---------------- บทสนทนา ---------------- */
+let dq=[],dcb=null,typing=null,dfull='';
+function showArrow(){const r=$('#nbBtn').getBoundingClientRect(),a=$('#arrow');a.hidden=false;a.style.left=clamp(r.left+r.width/2-85,6,innerWidth-176)+'px';a.style.top=(r.bottom+4)+'px';}
+function hideArrow(){$('#arrow').hidden=true;}
+function say(lines,cb){
+  dq=lines.slice();dcb=cb||null;$('#dlg').hidden=false;stopWalk();nextLine();
+}
+function nextLine(){
+  if(!dq.length){$('#dlg').hidden=true;hideArrow();const f=dcb;dcb=null;if(f)f();return;}
+  const l=dq.shift(),d=$('#dlg');if(l.fx==='arrow')showArrow();else hideArrow();
+  d.className='step'+(l.w==='sys'?' sys':!l.w?' nar':'');
+  $('#dAv').hidden=!l.w||l.w==='me';$('#dName').hidden=!l.w;
+  if(l.w){$('#dAv').innerHTML=avatarHTML(l.w);$('#dName').textContent=nameOf(l.w);}
+  const el=$('#dText');dfull=l.t;el.textContent='';clearInterval(typing);let i=0;
+  typing=setInterval(()=>{i+=2;el.textContent=dfull.slice(0,i);if(i>=dfull.length){clearInterval(typing);typing=null;}},16);
+}
+$('#dlg').addEventListener('click',()=>{if(typing){clearInterval(typing);typing=null;$('#dText').textContent=dfull;}else nextLine();});
+addEventListener('keydown',e=>{
+  if(!$('#dlg').hidden&&(e.key==='Enter'||e.key===' ')){e.preventDefault();$('#dlg').click();}
+  if(e.key==='Escape'&&$('#nb').classList.contains('open'))closeNB();
+});
+
+/* ---------------- Modal ---------------- */
+function openModal(html){const c=$('#modalCard');c.innerHTML=html;$('#modal').hidden=false;$('#modal').scrollTop=0;return c;}
+function closeModal(){$('#modal').hidden=true;}
+function infoCard(title,svg,text,btn,cb,sys){
+  const c=openModal(`<h2 class="serif">${title}</h2>${svg?`<div class="mini">${svg}</div>`:''}<div class="note ${sys?'sysn':''}">${text}</div><div class="row"><button class="btn step" id="mOk">${btn||'ต่อไป'}</button></div>`);
+  $('#mOk',c).onclick=()=>{closeModal();if(cb)cb();};$('#mOk',c).focus();
+}
+function choiceModal({title,q,opts,ok,explain,btn},done){
+  const c=openModal(`<h2 class="serif">${title}</h2><div class="note sysn">${q}</div><div id="co"></div><div id="cmsg"></div>`);
+  const co=$('#co',c);
+  opts.forEach((t,i)=>{const b=document.createElement('button');b.className='opt step';b.textContent=t;b.onclick=()=>{
+    if(i===ok){$$('.opt',co).forEach(x=>x.disabled=true);b.classList.add('good');b.disabled=false;
+      $('#cmsg',c).innerHTML=`<div class="note ok">${explain}</div><div class="row"><button class="btn step" id="mOk">${btn||'ต่อไป'}</button></div>`;
+      $('#mOk',c).onclick=()=>{closeModal();done&&done();};$('#mOk',c).focus();
+    }else{b.disabled=true;$('#cmsg',c).innerHTML='<div class="note bad">ยังไม่ใช่ ลองสังเกตอีกครั้ง</div>';}};co.appendChild(b);});
+}
+
+/* ---------------- การเดิน ---------------- */
+const keys=new Set();
+addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','a','d','w','s'].includes(e.key))keys.add(e.key);});
+addEventListener('keyup',e=>keys.delete(e.key));
+const isBusy=()=>!$('#dlg').hidden||!$('#modal').hidden||!$('#title').hidden||fading||!$('#quiz').hidden||$('#nb').classList.contains('open');
+function stopWalk(){P.moving=false;P.pending=null;P.tx=P.x;P.ty=P.y;if(P.el)P.el.classList.remove('walking');}
+function walkTo(x,y,fn){P.tx=clamp(x,30,W-30);P.ty=clamp(y,BAND[0],BAND[1]);P.moving=true;P.pending=fn||null;if(P.el)P.el.classList.add('walking');}
+world.addEventListener('click',e=>{
+  if(isBusy())return;
+  const hs=e.target.closest('[data-hs]');
+  if(hs){const id=hs.dataset.hs;let sx,sy;
+    if(id==='new'||id==='laks'){const n=$('#e_'+id);sx=parseFloat(n.style.left)-70;sy=parseFloat(n.style.top)+4;}
+    else{const h=cur.hsmap[id];sx=h.sx;sy=h.sy;}
+    walkTo(sx,sy,()=>act(id));return;}
+  const [wx,wy]=toWorld(e.clientX,e.clientY);walkTo(wx,wy,null);
+});
+world.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.dataset&&e.target.dataset.hs){e.preventDefault();e.target.click();}});
+
+let last=performance.now();
+function tick(t){
+  const dt=Math.min(.05,(t-last)/1000);last=t;
+  if(P.el&&!isBusy()){
+    if(keys.size){const dx=(keys.has('ArrowRight')||keys.has('d')?1:0)-(keys.has('ArrowLeft')||keys.has('a')?1:0);const dy=(keys.has('ArrowDown')||keys.has('s')?1:0)-(keys.has('ArrowUp')||keys.has('w')?1:0);
+      P.pending=null;P.tx=clamp(P.x+dx*160,30,W-30);P.ty=clamp(P.y+dy*60,BAND[0],BAND[1]);P.moving=true;P.el.classList.add('walking');}
+    if(P.moving){
+      const dx=P.tx-P.x,dy=P.ty-P.y,d=Math.hypot(dx,dy);
+      if(d<5){P.moving=false;P.el.classList.remove('walking');const f=P.pending;P.pending=null;if(f)f();}
+      else{const sp=290*dt;const m=Math.min(sp,d);P.x+=dx/d*m;P.y+=dy/d*m;if(Math.abs(dx)>3){P.face=dx>0?1:-1;$('.flip',P.el).style.transform=`scaleX(${P.face})`;}}
+      setPos(P.el,P.x,P.y);
+    }
+    checkTriggers(t);
+  }
+  applyCam();requestAnimationFrame(tick);
+}
+function checkTriggers(t){
+  if(t<P.lock||fading)return;
+  const s=SC[G.scene];
+  if(G.scene==='S2'&&!G.f.stumbled&&P.x>1010&&P.moving){stopWalk();stumble();return;}
+  if(P.x>=W-48&&P.tx>P.x&&s.right){tryExit('r');}
+  else if(P.x<=48&&P.tx<P.x&&s.left){tryExit('l');}
+}
+function missingText(){const m=Object.keys(G.items).filter(k=>!G.items[k]).map(k=>`${NB[k].l} ${NB[k].t}`);return m.join(' • ');}
+function tryExit(dir){
+  stopWalk();
+  const sc=G.scene;
+  const block=msg=>{P.x+=dir==='r'?-70:70;setPos(P.el,P.x,P.y);P.tx=P.x;say([{w:'sys',t:msg}]);};
+  if(sc==='S1'){ if(dir==='r'){ if(!G.f.sys)return block('ยังไม่ต้องรีบนะ ไปคุยกับอาจารย์นิวก่อน'); return goScene('S2','l',onEnterS2);} }
+  if(sc==='S2'){ if(dir==='l')return goScene('S1','r'); return goScene('S3','l',onEnterS3); }
+  if(sc==='S3'){ if(dir==='l')return goScene('S2','r');
+    const k=Object.keys(G.f.st).length;
+    if(k<3)return block('สำรวจครบรึยังน้า? รูปเคารพยังคลิกไม่ครบ 3 องค์ ย้อนกลับไปคลิกให้ครบก่อนนะ');
+    if(!G.items.d)return block('สำรวจครบรึยังน้า? ยังตอบข้อสังเกตของฉันไม่จบ คลิกที่รูปเคารพอีกครั้งเพื่อเริ่มใหม่นะ');
+    if(!G.items.c)return block('สำรวจครบรึยังน้า? ยังหาหินศิลาแลงไม่ครบ 3 ก้อน ย้อนกลับไปหาที่ภายนอกปราสาทก่อนนะ');
+    if(!G.items.b)return block('สำรวจครบรึยังน้า? ที่ภายนอกปราสาทยังสำรวจไม่ครบ 4 จุด ย้อนกลับไปคลิกหมายเลข 1–4 ให้ครบก่อนนะ');
+    return goScene('S4','l',onEnterS4);}
+}
+
+/* ---------------- เหตุการณ์ในเกม ---------------- */
+function act(id){
+  if(id==='new')return talkNew();
+  if(id==='laks')return talkLaks();
+  if(EXT[id])return seeExt(id);
+  if(id==='pile')return openHunt();
+  if(ST[id])return seeStatue(id);
+}
+function talkNew(){
+  if(G.f.talk>=1)return say([{w:'new',t:'ไปสำรวจกันเลยนะคะ ไม่ต้องรอครูแล้ว'}]);
+  say([
+    {w:'new',t:'โอเค ทุกคนพร้อมไหมคะ วันนี้เราจะมาสำรวจปราสาทเมืองสิงห์กัน'},
+    {w:'new',t:'เมื่อได้รับความรู้ ก็บันทึกใส่สมุด เพื่อสรุปความรู้กันนะคะ ดูที่ไอคอนสมุดมุมขวาบนนะคะ',fx:'arrow'},
+    {w:'new',t:'ข้อมูลที่ได้จะถูกจดลงสมุดตรงนี้ให้เองอัตโนมัติ อยากทบทวนเมื่อไหร่ ก็แตะที่ไอคอนนี้ได้เลยค่ะ',fx:'arrow'}
+  ],()=>{
+    G.f.talk=1;renderHS();
+    say([{w:'new',t:'ปราสาทเมืองสิงห์ เป็นโบราณสถานสำคัญทางประวัติศาสตร์และสถาปัตยกรรมขอม สร้างขึ้นราวพุทธศตวรรษที่ 18 สมัยพระเจ้าชัยวรมันที่ 7 แห่งอาณาจักรขอม ทำหน้าที่เป็นศูนย์กลางทางศาสนาที่อยู่ทางทิศตะวันตกสุดของอาณาจักรขอม เชื่อมต่อกับเส้นทางการค้าและวัฒนธรรมริมแม่น้ำแควน้อย'}],()=>{
+      record('a');
+      say([{w:'new',t:'เอ๊ะ? จะว่าไป เพื่อนเธอหายไปไหน?'},
+        {w:'new',t:'ตกรถทัวร์รึเปล่า อาจารย์ไปตามหาก่อนนะ ระหว่างนี้หาข้อมูลไปพลางๆก่อนเด้อ'},
+        {w:null,t:'พูดจบ อาจารย์นิวก็ถูกเรียกตัวไปพอดี ปล่อยให้พวกเราสำรวจปราสาทกันเอง'}],()=>{
+        G.f.talk=2;
+        const n=$('#e_new');n.classList.add('walking');
+        animEnt(n,parseFloat(n.style.left),1330,parseFloat(n.style.top),2600,()=>{n.remove();
+          say([{w:null,t:'คุณหนักใจนิดหน่อย เพราะสมองตอน 8 โมงเช้าคงช่วยอะไรคุณไม่ได้มากเท่าไหร่ ถ้ามีระบบแบบในละคร AI มาช่วยก็คงดี'}],()=>{
+            say([
+              {w:'sys',t:'ระบบเปิดใช้งานแล้ว สวัสดี ฉันคือ “ลับ” ระบบ AI ผู้ช่วยถอดรหัสปราสาทเมืองสิงห์'},
+              {w:'me',t:'ฮึ? มีได้ไง ฉันย้อนอดีตรึ'},
+              {w:'sys',t:'คิดซะว่าฉันคือภาพหลอนละกัน'},
+              {w:null,t:'คุณคิดว่าก็ดีเหมือนกัน จะได้รีบกลับรถทัวร์ไปนอน'},
+              {w:'sys',t:'ฉันจะช่วยให้คุณกลับบ้านไวขึ้น! ฉันจะพาสำรวจและหาคำตอบให้เอง คุณแค่เดินตามและคลิกสิ่งที่น่าสนใจ'},
+              {w:'sys',t:'เป้าหมายคือเก็บข้อมูลให้ครบ ก ข ค ง ลงสมุด แล้วไปหาพี่ลักษ์ที่ทางออก เริ่มจากเดินเข้าปราสาทไปทางขวามือเลย'}
+            ],()=>{G.f.sys=1;setObj();});
+          });
+        });
+      });
+    });
+  });
+}
+function animEnt(el,x1,x2,y,ms,cb){
+  const t0=performance.now();const flip=$('.flip',el);flip.style.transform=`scaleX(${x2>=x1?1:-1})`;
+  (function f(t){const k=clamp((t-t0)/ms,0,1);setPos(el,x1+(x2-x1)*k,y);if(k<1)requestAnimationFrame(f);else{el.classList.remove('walking');cb&&cb();}})(t0);
+}
+function onEnterS2(){
+  if(G.f.s2)return;G.f.s2=1;
+  say([{w:'sys',t:'มาถึงจุดแรกกันแล้ว!'},{w:'sys',t:'ตรงหน้าคือภายนอกปราสาท คุณเลือกได้เลยว่าจะสำรวจจุดนี้ก่อน หรือจะเดินเข้าไปในปราสาทก่อนก็ได้นะ'}],()=>{
+    const c=openModal(`<h2 class="serif">จะไปทางไหนดี?</h2><button class="opt step" id="oHere">สำรวจจุดนี้ก่อน (คลิกหมายเลข 1–4)</button><button class="opt step" id="oIn">เดินเข้าไปในปราสาทก่อน</button>`);
+    $('#oHere',c).onclick=()=>{closeModal();say([{w:'sys',t:'ดีเลย! คลิกที่หมายเลข 1 ถึง 4 รอบๆ ปราสาทได้เลย'}]);};
+    $('#oIn',c).onclick=()=>{closeModal();say([{w:'sys',t:'ได้เลย! เดินไปทางขวามือได้เลย ไม่ต้องห่วง จุดนี้ยังรอให้ย้อนกลับมาสำรวจได้ตลอด'}]);};
+  });
+}
+function miniSVG(k){
+  if(k==='prang')return `<svg width="150" height="150" viewBox="-120 -300 240 310">${prangSVG(0,0,1)}</svg>`;
+  if(k==='moat')return `<svg width="260" height="90" viewBox="0 0 260 90">${Array.from({length:7},(_,i)=>`<rect x="0" y="${i*12+3}" width="260" height="12" fill="${i%2?'#8d7343':'#3f8a7a'}"/>`).join('')}</svg>`;
+  if(k==='gopura')return `<svg width="170" height="150" viewBox="-120 -245 240 250">${gopuraSVG(0,0,1)}</svg>`;
+  return `<svg width="260" height="90" viewBox="0 0 260 90"><rect width="260" height="90" fill="#6f9a73"/><rect y="28" width="260" height="38" fill="#2c6e62"/><path d="M0 47q20 -6 40 0t40 0t40 0t40 0t40 0t40 0t40 0" stroke="#bfe6d6" stroke-width="3" fill="none"/></svg>`;
+}
+function seeExt(id){
+  const e=EXT[id];
+  infoCard(`${HSNUM[id]}. ${e.t}`,miniSVG(id),e.x,'บันทึกสิ่งที่เห็น',()=>{
+    G.f.ext[id]=1;renderHS();setObj();
+    if(Object.keys(G.f.ext).length===4&&!G.f.riverDone)extSummary();
+  });
+}
+function extSummary(){
+  say([
+    {w:'sys',t:'ครบทั้ง 4 จุดแล้ว! มาสรุปกันหน่อย'},
+    {w:'sys',t:'การออกแบบผังปราสาท เป็นตัวจำลองจักรวาลตามคติความเชื่อในสมัยนั้นหล่ะ'},
+    {w:'sys',t:'ปรางค์ประธานตรงกลาง: เป็นศูนย์กลางของปราสาท เปรียบเสมือน “เขาพระสุเมรุ” ซึ่งเป็นแกนกลางของจักรวาลและเป็นที่ประทับของสิ่งศักดิ์สิทธิ์ตามคติพุทธศาสนามหายาน'},
+    {w:'sys',t:'ซุ้มประตู (โคปุระ) 4 ทิศ: สร้างเป็นซุ้มประตูทางเข้าเชื่อมต่อกับกำแพงแก้วทั้ง 4 ด้าน เพื่อเป็นจุดผ่านเข้าสู่พื้นที่ศักดิ์สิทธิ์ชั้นใน โดยเน้นความยิ่งใหญ่โอ่อ่าสมพระเกียรติ'},
+    {w:'sys',t:'คูน้ำและคันดินล้อมรอบ: ขุดล้อมรอบพื้นที่ปราสาทและตัวเมืองหลายชั้น เปรียบเสมือน “มหาสมุทรสีทันดร” ที่ล้อมรอบเขาพระสุเมรุ และยังใช้ประโยชน์ในการกักเก็บน้ำอุปโภคบริโภค'},
+    {w:'sys',t:'เมื่อกี้ได้เจอลุ่มแม่น้ำแควน้อยด้วยใช่ไหม'},
+    {w:'sys',t:'สงสัยไหมว่า การที่ตัวปราสาทมาตั้งอยู่บริเวณแม่น้ำนี้มีประโยชน์อะไรบ้าง?'}
+  ],riverGame);
+}
+function riverGame(){
+  const items=shuffle([
+    {t:'เส้นทางคมนาคม',ok:1},{t:'เป็นแหล่งน้ำหล่อเลี้ยงชุมชน',ok:1},{t:'เป็นจุดยุทธศาสตร์ในการปกครอง เผยแพร่ศาสนา',ok:1},
+    {t:'ใช้เป็นสนามบินของกษัตริย์'},{t:'เป็นแหล่งผลิตหินทราย'},{t:'ช่วยให้มองเห็นปราสาทได้จากอวกาศ'},{t:'เป็นสถานที่ขุดหาทองคำ'}]);
+  const c=openModal(`<h2 class="serif">ประโยชน์ของการตั้งอยู่ริมแม่น้ำ</h2>
+   <div class="mini" style="grid-auto-flow:column;gap:14px"><span style="font-weight:700">เลือกให้ครบ 3 ข้อ • พบแล้ว <span id="rcount">0</span>/3</span></div>
+   <div class="igrid" id="ritems"></div><div id="rmsg" class="note sysn" style="margin-top:8px">คลิกเลือกข้อที่คิดว่าเป็นประโยชน์ของการตั้งอยู่ริมแม่น้ำ</div>
+   <div class="row"><button class="btn ghost step" id="rHint">ขอคำใบ้</button></div>`);
+  let found=0;
+  items.forEach(it=>{const b=document.createElement('button');b.className='opt step';b.textContent=it.t;
+    b.onclick=()=>{
+      if(it.ok){b.classList.add('good');b.disabled=true;found++;$('#rcount',c).textContent=found;$('#rmsg',c).textContent=found<3?'ใช่เลย! เหลืออีก '+(3-found)+' ข้อ':'ครบ 3 ข้อแล้ว!';
+        if(found===3)setTimeout(()=>{closeModal();riverSummary();},650);}
+      else{b.disabled=true;b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake');$('#rmsg',c).textContent='ยังไม่เกี่ยวนะ ลองใหม่อีกครั้ง';}
+    };$('#ritems',c).appendChild(b);});
+  $('#rHint',c).onclick=()=>{$('#rmsg',c).textContent='คำใบ้: ถ้านึกถึงแม่น้ำ นึกถึงอะไร?';};
+}
+function riverSummary(){
+  say([
+    {w:'sys',t:'ใช่แล้ว!'},
+    {w:'sys',t:'การที่ปราสาทเมืองสิงห์ตั้งอยู่ริมแม่น้ำแควน้อยมีประโยชน์ 3 อย่างหลัก ๆ คือ:'},
+    {w:'sys',t:'1. เป็นเส้นทางคมนาคมและการค้า เชื่อมภาคกลางไปออกทะเลอันดามันได้ (จากการมีหลักฐานคือการขุดพบเครื่องถ้วยจีนและเครื่องสังคโลกจำนวนมาก)'},
+    {w:'sys',t:'2. เป็นแหล่งน้ำหล่อเลี้ยงชุมชน ใช้ทำการเกษตรและกินใช้ (มีหลักฐานคือระบบคูน้ำคันดิน 7 ชั้นที่ขุดเชื่อมชักน้ำจากแม่น้ำแควน้อยเข้ามาเก็บไว้ในเมือง)'},
+    {w:'sys',t:'3. เป็นจุดยุทธศาสตร์การปกครองและเผยแผ่ศาสนา ในฐานะเมืองหน้าด่านทิศตะวันตกสุดของขอม (มีหลักฐานคือกำแพงเมืองที่แข็งแรง การค้นพบรูปเคารพศิลปะบายน และชื่อเมือง “ศรีชัยสิงหปุระ” ในศิลาจารึกปราสาทพระขรรค์)'},
+    {w:'sys',t:'บันทึกคำตอบลงสมุดแล้วไปต่อกัน'}
+  ],()=>{
+    G.f.riverDone=1;record('b');renderHS();setObj();
+    if(!G.f.stumbled)say([{w:'sys',t:'เดินต่อไปทางขวาเพื่อเข้าไปข้างในปราสาทได้เลย'}]);
+  });
+}
+
+/* --- สะดุดศิลาแลง + เกมหาของ --- */
+function rockPoly(r,cx,cy,sz,sx=1.15,sy=.85){const a=[];const n=9;for(let i=0;i<n;i++){const t=i/n*Math.PI*2+r()*.3;const k=sz*(.78+r()*.4);a.push(`${(cx+Math.cos(t)*k*sx).toFixed(1)},${(cy+Math.sin(t)*k*sy).toFixed(1)}`);}return a.join(' ');}
+function rockSVG(r,cx,cy,type,sz=36){
+  const poly=rockPoly(r,cx,cy,sz);
+  if(type==='lat'){let pits='';for(let i=0;i<10;i++)pits+=`<circle cx="${(cx+(r()-.5)*sz*1.5).toFixed(1)}" cy="${(cy+(r()-.5)*sz*1.0).toFixed(1)}" r="${(1.5+r()*2).toFixed(1)}" fill="#5e2312"/>`;
+    return `<polygon class="rk" points="${poly}" fill="#a2492b" stroke="#6b2a15" stroke-width="3"/>${pits}`;}
+  const fills={gray:'#9d9a94',tan:'#cdb88e',dark:'#4a4a55',clay:'#b9633f',moss:'#6f7f55'};
+  return `<polygon class="rk" points="${poly}" fill="${fills[type]}" stroke="#3d3326" stroke-width="3"/><path d="M${cx-sz*.5} ${cy-sz*.15}q${sz*.5} -${sz*.3} ${sz} 0" stroke="#fff" stroke-width="2" fill="none" opacity=".3"/>`;
+}
+function stumble(){
+  G.f.stumbled=1;
+  say([{w:null,t:'คุณสะดุดบางอย่าง'},{w:'sys',t:'โอ้ เป็นอะไรไหม?'},{w:'sys',t:'อ๊ะ! นี่มัน…'}],()=>{
+    infoCard('ก้อนหินปริศนา',`<svg width="190" height="120" viewBox="0 0 190 120">${rockSVG(mulberry(5),95,60,'lat',48)}</svg>`,
+      'หินสีแดงเข้มแปลกตา ผิวเต็มไปด้วยรูพรุนเล็กๆ','ต่อไป',()=>{
+        say([{w:'sys',t:'หินแบบนี้น่าจะมีอยู่แถวนี้หลายก้อนเลยนะ เก็บให้ครบ 3 ก้อนสิ แล้วฉันจะให้ข้อมูล'}],stumbleChoice);
+      });
+  });
+}
+function stumbleChoice(){
+  const c=openModal(`<h2 class="serif">จะทำอะไรต่อดี?</h2><div class="note sysn">เลือกได้เลย จะหาหินตอนนี้ หรือไปดูห้องถัดไปก่อนแล้วค่อยย้อนกลับมาก็ได้</div>
+   <button class="opt step" id="chHunt">หาหินแบบนี้ให้ครบ 3 ก้อนเลย</button>
+   <button class="opt step" id="chLater">ไว้ก่อน ไปดูห้องถัดไปก่อน แล้วค่อยย้อนกลับมาหาหิน</button>
+   <div class="note">เงื่อนไข: ต้องหาหินให้ครบ 3 ก้อนและสำรวจรูปเคารพให้ครบ ถึงจะไปช่วงตอบคำถามได้</div>`);
+  $('#chHunt',c).onclick=()=>{closeModal();openHunt();};
+  $('#chLater',c).onclick=()=>{closeModal();renderHS();setObj();say([{w:'sys',t:'ได้เลย! เดินไปทางขวาเพื่อดูห้องถัดไปได้ ส่วนหินจะรออยู่ตรงนี้ (กดที่รูปหินบนพื้นเพื่อกลับมาหาได้ตลอด)'}]);};
+}
+function lateriteWhy(){
+  say([{w:'sys',t:'ครบ 3 ก้อนแล้ว!'},{w:'sys',t:'สงสัยไหม ว่าทำไมถึงมีหินศิลาแลงเต็มแถวนี้ไปหมดเลย?'}],()=>{
+    const c=openModal(`<h2 class="serif">สงสัยไหม?</h2><button class="opt step" id="cyes">สงสัย</button><button class="opt step" id="cno">ไม่อยากรู้</button>`);
+    const explain=()=>say([
+      {w:'sys',t:'เพราะว่าหินศิลาแลง เป็นวัสดุที่หาได้ง่ายในบริเวณนั้น แถมตอนขุดขึ้นมาใหม่ๆ มันก็มีความชื้น นิ่ม ทำให้สามารถตัดได้ง่าย พอโดนอากาศก็แข็งโป๊ก สะดวกสุดๆ เลยล่ะ!'},
+      {w:'sys',t:'อีกทั้งนอกจาก 3 ก้อนนี้ โครงสร้างปราสาทหลัก ส่วนใหญ่ก็ใช้หินศิลาแลงหมดเลยนะ'}
+    ],()=>{
+      infoCard('รหัสลับ: ศิลาแลง',`<svg width="190" height="110" viewBox="0 0 190 110">${rockSVG(mulberry(5),95,55,'lat',44)}</svg>`,
+        '<b>ศิลาแลง</b>: หาง่ายในพื้นที่ ตัดง่ายตอนยังชื้นนิ่ม แข็งเมื่อโดนอากาศ ใช้ก่อโครงสร้างหลักของปราสาท แต่เนื้อหยาบ ไม่เหมาะแกะสลัก',
+        'เข้าใจแล้ว',()=>{record('c');renderHS();setObj();},true);
+    });
+    $('#cyes',c).onclick=()=>{closeModal();explain();};
+    $('#cno',c).onclick=()=>{closeModal();say([{w:'sys',t:'ก็ต้องรู้อยู่ดีป่ะ?'}],explain);};
+  });
+}
+function openHunt(){
+  const r=mulberry((Date.now()%9999)+3);
+  const cells=[];for(let rr=0;rr<3;rr++)for(let c=0;c<4;c++)cells.push([80+c*160,60+rr*100]);
+  const sh=shuffle(cells,r);const decoys=shuffle(['gray','gray','tan','tan','dark','clay','clay','moss','dark'],r);
+  const rocks=sh.map((p,i)=>({p,type:i<3?'lat':decoys[i-3]}));
+  const g=shuffle(rocks,r).map(o=>`<g class="rock" data-k="${o.type}">${rockSVG(r,o.p[0],o.p[1],o.type)}</g>`).join('');
+  const c=openModal(`<h2 class="serif">หาศิลาแลงให้ครบ 3 ชิ้น</h2>
+   <div class="mini" style="grid-auto-flow:column;gap:14px"><svg width="86" height="56" viewBox="0 0 86 56">${rockSVG(mulberry(5),43,28,'lat',22)}</svg><span id="hcount" style="font-weight:700">พบแล้ว 0/3</span></div>
+   <svg id="huntsvg" viewBox="0 0 640 310" class="step">${g}</svg><div id="hmsg" class="note sysn" style="margin-top:10px">เล็งหาหินสีแดงเข้มที่มีรูพรุน คลิกที่ก้อนหินเพื่อตรวจสอบ</div>
+   <div class="row"><button class="btn ghost step" id="hSkip">ไว้ก่อน ไปสำรวจที่อื่นก่อน</button></div>`);
+  let found=0;const svg=$('#huntsvg',c);
+  svg.addEventListener('click',e=>{
+    const rk=e.target.closest('.rock');if(!rk||rk.dataset.done)return;
+    if(rk.dataset.k==='lat'){rk.dataset.done=1;rk.classList.add('found');found++;$('#hcount',c).textContent=`พบแล้ว ${found}/3`;
+      $('#hmsg',c).textContent=found<3?'ใช่แล้ว! หินแบบนี้เลย':'ครบ 3 ชิ้นแล้ว!';
+      if(found===3)setTimeout(()=>{closeModal();lateriteWhy();},650);
+    }else{svg.classList.remove('shake');void svg.getBoundingClientRect();svg.classList.add('shake');$('#hmsg',c).textContent='ไม่ใช่ศิลาแลง สังเกตสีและรูพรุนอีกที';}
+  });
+  $('#hSkip',c).onclick=()=>{closeModal();renderHS();setObj();say([{w:'sys',t:'ได้เลย! เดินสำรวจที่อื่นก่อน แล้วค่อยกลับมาตรวจสอบหิน (กดที่รูปหินบนพื้น) ได้ตลอดนะ'}]);};
+}
+
+/* --- ห้องรูปเคารพ --- */
+function onEnterS3(){
+  if(G.f.s3)return;G.f.s3=1;
+  say([{w:null,t:'ภายในห้องเย็นและเงียบ ลายสลักบนผนังถูกแสงสลัวเผยให้เห็นรูปสลักสามองค์'},{w:'sys',t:'คลิกที่รูปเคารพทั้ง 3 องค์ แล้วฉันจะชวนคุณสังเกตอะไรบางอย่าง'}]);
+}
+function statueMini(k){const files={naga:'s_1.png',avalo:'s_2.png',praj:'s_3.png'};
+  return `<img src="${files[k]}" alt="${esc(ST[k].t)}" style="display:block;width:190px;height:210px;object-fit:contain">`;}
+function seeStatue(id){
+  const e=ST[id];
+  infoCard(e.t,statueMini(id),e.x,'ตรวจดูแล้ว',()=>{
+    G.f.st[id]=1;renderHS();setObj();
+    const k=Object.keys(G.f.st).length;
+    if(k===3&&!G.items.d)setTimeout(askObs,200);
+    else if(k===3&&G.items.d)say([{w:'sys',t:'ข้อมูลครบแล้ว เดินไปทางขวาเพื่อออกจากห้องได้เลย'}]);
+  });
+}
+function askObs(){
+  say([
+    {w:'sys',t:'จำได้ไหมที่ก่อนหน้านี้เราพูดถึงเรื่องการค้นพบรูปเคารพ ที่เป็นหลักฐานที่สะท้อนถึงการเผยแผ่ศาสนา ตอนนี้คุณเจอมันแล้ว!'},
+    {w:'sys',t:'ลองสังเกตให้ดี รูปสลักทั้ง 3 องค์เป็นหินสีเทา ผิวเรียบละเอียด ต่างจากศิลาแลงสีแดงที่เราเจอข้างนอกมาก'}
+  ],()=>{
+    choiceModal({title:'ข้อสังเกตของระบบ',q:'ทำไมคนสมัยก่อนจึงเลือก <b>หินทราย</b> มาแกะสลักรูปเคารพเหล่านี้ แทนที่จะใช้ศิลาแลง?',
+      opts:['เพราะแข็งเร็วจึงก่อกำแพงได้ดี','เพราะเนื้อละเอียด แกะสลักพระพักตร์และเครื่องทรงได้ประณีต','เพราะหาง่ายกว่าและมีรูพรุนเบา'],ok:1,
+      explain:'ถูกต้อง! หินทรายเนื้อละเอียดจึงแกะสลักรูปเคารพได้งดงาม ส่วนศิลาแลงเหมาะกับงานก่อสร้าง'},()=>{
+      say([
+        {w:'sys',t:'รูปเคารพเหล่านี้เป็นศิลปะแบบบายน พบพระพุทธรูปนาคปรก พระโพธิสัตว์อวโลกิเตศวร และนางปรัชญาปารมิตา เมื่อรวมกันแล้ว จะเรียกว่า “รัตนตรัยมหายาน”'},
+        {w:'sys',t:'นอกจากตัวสถาปัตยกรรม ประติมากรรมเหล่านี้ก็เป็นสิ่งที่สะท้อนคุณค่าด้านความเชื่อของพุทธศาสนานิกายมหายานด้วยนะ! เอาล่ะ ไปกันต่อ'}
+      ],()=>{
+        record('d');
+        say([{w:'sys',t:Object.values(G.items).every(Boolean)?'สมุดครบทั้ง ก ข ค ง แล้ว! เดินไปทางขวาเพื่อออกจากห้องไปหาพี่ลักษ์ได้เลย':'สำรวจครบรึยังน้า? สมุดยังขาด: '+missingText()}]);
+      });
+    });
+  });
+}
+
+/* --- ลานทางออก + พี่ลักษ์ --- */
+function onEnterS4(){
+  if(G.f.s4)return;G.f.s4=1;setObj();
+  say([{w:null,t:'คุณเดินออกมาที่ลานริมแม่น้ำ มีคนโบกมือทักอยู่ไกลๆ'}],()=>{
+    P.tx=P.x;walkTo(540,410,()=>talkLaks());
+  });
+}
+function talkLaks(){
+  if(G.quizOn)return;
+  say([
+    {w:'laks',t:'อ้าว! มาแล้วเหรอน้อง สำรวจครบแล้วใช่ไหม สมุดเต็มหรือยัง'},
+    {w:'me',t:'ครบแล้วค่ะ… เอ่อ ครับ (ไม่ได้ง่วงแล้วนะ)'},
+    {w:'laks',t:'เก่งมาก! งั้นถึงเวลาพิสูจน์แล้ว เดี๋ยวพี่กับอาจารย์ๆ จะมาถามคำถาม 5 ข้อ ใครตอบได้เร็วและแม่นสุดชนะ เปิดให้เพื่อนๆ เข้ามาร่วมแข่งได้เลย'},
+    {w:'sys',t:'ผู้คุมจอคือคนกดเริ่มแข่งขัน เปิดห้องให้เพื่อนสแกน QR แล้วกดเริ่มได้เลย'}
+  ],openLobby);
+}
+
+/* =====================================================================
+   ระบบแข่งขัน + หลายผู้เล่น (Firebase Realtime Database)
+   โครงข้อมูล: rooms/{รหัสห้อง}/state   = เฟส/ข้อปัจจุบัน (ผู้คุมจอเป็นคนเขียน)
+               rooms/{รหัสห้อง}/players = ความคืบหน้าของผู้เล่นแต่ละคน
+   ===================================================================== */
+const R={code:'',pid:'',me:null,remote:{},phase:'lobby',qi:-1,err:'',hosting:false,alarmAt:0,online:false};
+let db=null;
+const genCode=()=>Array.from({length:5},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*32)]).join('');
+function fbInit(){
+  if(db)return true;
+  if(typeof firebase==='undefined'){R.err='โหลด Firebase ไม่ได้ — ตรวจอินเทอร์เน็ต';return false;}
+  if(!(firebaseConfig.apiKey&&firebaseConfig.databaseURL&&firebaseConfig.projectId)){R.err='ยังไม่ได้ใส่ firebaseConfig ที่บนสุดของไฟล์ (ดูวิธีตั้งค่าในไฟล์)';return false;}
+  try{if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);db=firebase.database();return true;}
+  catch(e){R.err='ตั้งค่า Firebase ไม่ถูกต้อง: '+e.message;return false;}
+}
+const roomRef=(p='')=>db.ref('rooms/'+R.code+(p?'/'+p:''));
+
+/* ---- ข้อมูลผู้เล่น + เกณฑ์ประเมิน (rubric) ---- */
+const RUB={4:'ตอบถูกทันทีในครั้งแรก',3:'ตอบถูกหลังดูคำใบ้ 1 ครั้ง',2:'ตอบผิดก่อน แล้วตอบถูก',1:'ตอบไม่ถูก / ข้ามข้อ'};
+const RUB_SKIP_SCORE=1; // คะแนนเมื่อตอบไม่ถูก/ข้ามข้อ (แก้ตัวเลขตรงนี้ได้)
+function makeMe(name){return{name,score:0,hints:0,correct:0,skipped:0,refl:'',q:{},order:{}};}
+const qs=(me,qi)=>me.q[qi]||(me.q[qi]={wrong:[],hintN:0,done:false,ok:false,pts:0});
+function rubric(s){if(!s||!s.done||!s.ok)return RUB_SKIP_SCORE;if((s.wrong||[]).length)return 2;return s.hintN?3:4;}
+function viewOf(me,qi){
+  const q=Q[qi],s=qs(me,qi);
+  const ord=me.order[qi]||(me.order[qi]=shuffle([0,1,2,3]));
+  return{qi,total:Q.length,who:q.who,whoName:q.whoName,text:q.text,choices:ord.map(i=>({i,t:q.c[i]})),wrong:s.wrong.slice(),
+    hints:q.h.slice(0,s.hintN),hintN:s.hintN,hintMax:q.h.length,done:s.done,ok:s.ok,pts:s.pts,lv:s.done?s.pts:0,
+    explain:s.done?q.exp:null,answer:s.done?q.a:null,score:me.score,left:2-s.wrong.length};
+}
+function answerOn(me,qi,ch){
+  const s=qs(me,qi);if(s.done||s.wrong.includes(ch))return;
+  if(ch===Q[qi].a){s.done=true;s.ok=true;s.pts=rubric(s);me.score+=s.pts;me.correct++;}
+  else{s.wrong.push(ch);if(s.wrong.length>=2){s.done=true;s.ok=false;s.pts=RUB_SKIP_SCORE;me.score+=s.pts;me.skipped++;}}
+}
+function hintOn(me,qi){const s=qs(me,qi);if(!s.done&&s.hintN<Q[qi].h.length){s.hintN++;me.hints++;}}
+function saveMe(){
+  if(!db||!R.code||!R.pid||!R.me)return;
+  roomRef('players/'+R.pid).update({name:R.me.name,score:R.me.score,hints:R.me.hints,correct:R.me.correct,skipped:R.me.skipped,refl:R.me.refl||'',q:R.me.q}).catch(()=>{});
+}
+function allPlayers(){
+  const o={...R.remote};
+  if(R.me&&R.pid==='host')o.host={...(o.host||{}),name:R.me.name,score:R.me.score,hints:R.me.hints,correct:R.me.correct,skipped:R.me.skipped,refl:R.me.refl,q:R.me.q,online:true};
+  return o;
+}
+const leaders=()=>Object.values(allPlayers()).filter(p=>p&&p.name).sort((a,b)=>(b.score||0)-(a.score||0));
+function boardData(){
+  return leaders().map(p=>({n:p.name,s:p.score||0,h:p.hints||0,c:p.correct||0,k:p.skipped||0,r:p.refl||'',
+    q:Q.map((_,i)=>{const s=p.q&&p.q[i];return s&&s.done?{lv:rubric(s),h:s.hintN||0}:null;})}));
+}
+
+/* ---- ตัวแสดงผลคำถาม (ใช้ทั้งจอหลักและมือถือผู้เล่น) ---- */
+function renderQ(root,v,act){
+  const ch=v.choices.map(c=>{const wrong=v.wrong.includes(c.i),good=v.done&&c.i===v.answer;
+    return `<button class="opt step ${good?'good':''}" data-i="${c.i}" ${(wrong||v.done)?'disabled':''}>${esc(c.t)}</button>`;}).join('');
+  let fb='';
+  if(v.done)fb=v.ok?`<div class="note ok"><b>ถูกต้อง! ได้ ${v.lv} คะแนน</b> <small>(${RUB[v.lv]})</small><br>${esc(v.explain)}</div>`
+    :`<div class="note bad"><b>ข้ามข้อนี้ ได้ ${v.pts} คะแนน</b> <small>(ตอบผิดครบ 2 ครั้ง)</small><br>${esc(v.explain)}</div>`;
+  else if(v.wrong.length)fb=`<div class="note bad">ยังไม่ถูก ลองอีกครั้ง — เหลือโอกาสอีก ${v.left} ครั้ง</div>`;
+  const hints=v.hints.length?`<div class="hintbox"><b>คำใบ้:</b> ${v.hints.map(h=>esc(h)).join('<br>')}</div>`:'';
+  root.innerHTML=`<div class="qcard card step">
+   <div class="qhead"><div class="qav">${avatarHTML(v.who)}</div><div class="qwho">${esc(v.whoName)} ถาม<small>ข้อ ${v.qi+1} จาก ${v.total}</small></div><div class="qscore">${v.score} คะแนน</div></div>
+   <div class="qtext">${esc(v.text)}</div>${ch}${hints}${fb}
+   <div class="qfoot"><span>ตอบผิดได้ 2 ครั้ง • ดูคำใบ้แล้ว <b>${v.hintN}/${v.hintMax}</b> ครั้ง</span>
+   <button class="btn ghost step hintbtn" ${(v.done||v.hintN>=v.hintMax)?'disabled':''}>ขอคำใบ้</button></div></div>`;
+  $$('.opt',root).forEach(b=>b.onclick=()=>act.answer(+b.dataset.i));
+  $('.hintbtn',root).onclick=()=>act.hint();
+}
+
+/* ---- สรุปคุณค่า + ตารางผล ---- */
+const VAL=[
+ {k:'hist',t:'คุณค่าด้านประวัติศาสตร์และโบราณคดี',b:['เป็นหลักฐานสำคัญที่แสดงถึงการแผ่ขยายอิทธิพลของจักรวรรดิขอมโบราณ (สมัยพระเจ้าชัยวรมันที่ 7) เข้ามายังดินแดนตะวันตกของประเทศไทย','บริเวณหลุมขุดค้นและพื้นที่รอบๆ พบหลักฐานชุมชนโบราณที่มีอายุย้อนไปถึงราว 2,000 ปี (ก่อนยุคสร้างปราสาท) สะท้อนการตั้งถิ่นฐานและพัฒนาการของมนุษย์ในลุ่มน้ำแควน้อยมาอย่างต่อเนื่อง']},
+ {k:'rel',t:'คุณค่าด้านศาสนาและความเชื่อ',b:['สะท้อนอิทธิพลของพุทธศาสนานิกายมหายาน ผ่านการขุดพบรูปเคารพสำคัญ เช่น พระพุทธรูปนาคปรก พระโพธิสัตว์อวโลกิเตศวร และนางปรัชญาปารมิตา ซึ่งรวมกันเรียกว่า “รัตนตรัยมหายาน”']},
+ {k:'arch',t:'คุณค่าด้านสถาปัตยกรรมและศิลปกรรม',b:['โดดเด่นด้วยสถาปัตยกรรมขอมโบราณแบบบายน (และรับอิทธิพลทวารวดี) ซึ่งเป็นปราสาทหินขอมแห่งเดียวที่สำคัญในพื้นที่จังหวัดกาญจนบุรี']},
+ {k:'geo',t:'คุณค่าด้านภูมิศาสตร์และยุทธศาสตร์',b:['ตั้งอยู่ริมฝั่งแม่น้ำแควน้อย ซึ่งในอดีตเคยเป็นเส้นทางคมนาคมและการค้าสำคัญที่เชื่อมต่อระหว่างดินแดนสยามกับเมืองมอญหรือประเทศพม่า']}
+];
+const VICON={
+ hist:'<svg viewBox="0 0 44 44"><path d="M10 6h24M10 38h24M13 6c0 12 18 10 18 16S13 26 13 38M31 6c0 12-18 10-18 16s18 4 18 16" stroke="#e2b04a" stroke-width="3" fill="none"/></svg>',
+ rel:'<svg viewBox="0 0 44 44"><circle cx="22" cy="14" r="10" fill="none" stroke="#e2b04a" stroke-width="2.5"/><circle cx="22" cy="14" r="5" fill="#cfc6b4"/><path d="M10 40q12-18 24 0z" fill="#cfc6b4"/></svg>',
+ arch:'<svg viewBox="-120 -300 240 310">'+prangSVG(0,0,1)+'</svg>',
+ geo:'<svg viewBox="0 0 44 44"><path d="M2 16q5-5 10 0t10 0t10 0t10 0M2 26q5-5 10 0t10 0t10 0t10 0M2 36q5-5 10 0t10 0t10 0t10 0" stroke="#3fa58f" stroke-width="3" fill="none"/></svg>'
+};
+function valuesHTML(){
+  return `<h3 class="serif" style="color:var(--gold);margin-top:10px">สรุปด้านคุณค่าของปราสาทเมืองสิงห์</h3><div class="vals">${VAL.map(v=>`<div class="val"><div class="vic">${VICON[v.k]}</div><h4>${v.t}</h4><ul>${v.b.map(x=>`<li>${x}</li>`).join('')}</ul></div>`).join('')}</div>`;
+}
+function boardHTML(b){
+  const head=Q.map((_,i)=>`<th>ข้อ ${i+1}</th>`).join('');
+  const rows=b.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.n)}</td>${r.q.map(x=>x?`<td><b>${x.lv}</b><small>ใบ้ ${x.h}</small></td>`:'<td>–</td>').join('')}<td><b>${r.s}</b><small>จาก ${Q.length*4}</small></td><td>${r.h}</td></tr>`).join('');
+  return `<h3 class="serif" style="color:var(--gold);margin-top:14px">ผลการแข่งขัน (ตามเกณฑ์ประเมิน)</h3>
+  <div class="tblwrap"><table class="board"><tr><th>#</th><th>ชื่อ</th>${head}<th>รวม</th><th>ใบ้รวม</th></tr>${rows}</table></div>
+  <p class="rub">4 = ถูกทันทีครั้งแรก • 3 = ถูกหลังดูคำใบ้ 1 ครั้ง • 2 = ผิดก่อนแล้วถูก • ${RUB_SKIP_SCORE} = ไม่ถูก/ข้ามข้อ<br>ตัวเลขเล็กใต้คะแนน = จำนวนครั้งที่ดูคำใบ้ในข้อนั้น</p>
+  <h3 class="serif" style="color:var(--gold);margin-top:12px">ความคิดเห็นสะท้อนคุณค่า</h3><div class="wall">${b.filter(r=>r.r).map(r=>`<blockquote>${esc(r.r)}<cite>— ${esc(r.n)}</cite></blockquote>`).join('')||'<p style="opacity:.7">ไม่มีความคิดเห็น</p>'}</div>`;
+}
+const ASPECTS='<div class="aspects"><span>ด้านประวัติศาสตร์</span><span>ด้านศาสนา ความเชื่อ</span><span>ด้านสถาปัตยกรรมและศิลปกรรม</span><span>ด้านภูมิศาสตร์และยุทธศาสตร์</span></div>';
+const REFLECT_HINT='คำใบ้: ลองตอบให้ครบ 4 ประเด็น';
+
+/* ---- ฝั่งผู้คุมจอ: เปิดห้อง ---- */
+function openLobby(back){
+  if(!R.me){R.me=makeMe(G.name);R.pid='host';}
+  const ok=fbInit();
+  if(ok&&!R.code)R.code=genCode();
+  const url=ok?location.href.split('#')[0]+'#join='+R.code:'';
+  const isFile=location.protocol==='file:';
+  const c=openModal(`<h2 class="serif">เปิดห้องแข่งขัน</h2>
+   ${ok?`<p>ให้เพื่อนสแกน QR หรือเปิดลิงก์ด้วยมือถือ แล้วกรอกชื่อเข้าร่วม (เข้าร่วมเพิ่มได้ตลอดช่วงแข่งขัน)</p>
+   <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:center;justify-content:center;margin:10px 0">
+    <div class="qr" id="qrBox" aria-label="QR code เข้าร่วมเกม"></div>
+    <div style="text-align:center"><div>รหัสห้อง</div><div class="codebig">${R.code}</div><div id="netstat" class="note sysn" style="margin:8px 0">กำลังสร้างห้อง…</div></div></div>
+   <p style="word-break:break-all;font-size:.85rem;opacity:.85" id="jurl"></p>
+   ${isFile?'<div class="note bad">ไฟล์นี้เปิดจากเครื่อง (file://) — มือถือเพื่อนจะเข้าไม่ได้ ให้อัปโหลดไฟล์ขึ้นเว็บ (Netlify Drop / GitHub Pages / Firebase Hosting) แล้วเปิดจากลิงก์นั้นแทน</div>':''}
+   <div><b>ผู้เล่นในห้อง:</b> <span class="chips" id="plist"></span></div>`
+   :`<div class="note bad"><b>ยังเปิดห้องออนไลน์ไม่ได้</b><br>${esc(R.err)}</div><p>ตั้งค่า Firebase ตามขั้นตอนที่เขียนไว้บนสุดของไฟล์ได้เลย ตอนนี้เล่นคนเดียวไปก่อนได้</p>`}
+   <div class="row">${back?'':'<button class="btn ghost step" id="soloBtn">เล่นคนเดียว</button>'}<button class="btn step" id="startQ">${back?'กลับสู่เกม':'เริ่มแข่งขัน (ผู้คุมจอ)'}</button></div>`);
+  if(ok){
+    $('#jurl',c).textContent=url;
+    try{new QRCode($('#qrBox',c),{text:url,width:176,height:176,colorDark:'#2b160d',colorLight:'#f1e6cf'});}
+    catch(e){$('#qrBox',c).innerHTML='<div style="padding:30px;color:#2b160d;width:176px">สร้าง QR ไม่ได้ ใช้ลิงก์ด้านล่างแทน</div>';}
+    hostRoom();updateLobby();
+  }
+  const go=()=>{closeModal();if(back){$('#quiz').hidden=false;hostRefresh();}else startQuiz();};
+  $('#startQ',c).onclick=go;const sb=$('#soloBtn',c);if(sb)sb.onclick=go;
+}
+function updateLobby(){
+  const pl=$('#plist');if(pl)pl.innerHTML=Object.values(allPlayers()).filter(p=>p&&p.name&&p.online!==false).map(p=>`<span class="chip ok">${esc(p.name)}</span>`).join('');
+  const ns=$('#netstat');if(ns){ns.className='note '+(R.online?'ok':'sysn');ns.textContent=R.online?'ห้องเปิดแล้ว รอเพื่อนเข้าร่วม':(R.err||'กำลังสร้างห้อง…');}
+}
+function hostRoom(){
+  if(R.hosting)return;R.hosting=true;
+  roomRef().set({state:{phase:'lobby',qi:-1,t:Date.now(),alarm:0}}).then(()=>{
+    R.online=true;updateLobby();saveMe();
+    roomRef('players').on('value',s=>{R.remote=s.val()||{};updateLobby();hostRefresh();});
+  }).catch(e=>{R.hosting=false;R.err='สร้างห้องไม่ได้: '+e.message+' — ตรวจ Rules ของ Realtime Database';updateLobby();});
+}
+function setState(phase){
+  R.phase=phase;
+  if(db&&R.code&&R.hosting)roomRef('state').set({phase,qi:R.qi,t:Date.now(),alarm:R.alarmAt||0}).catch(()=>{});
+}
+
+/* ---- ฝั่งผู้คุมจอ: ดำเนินช่วงแข่งขัน ---- */
+function startQuiz(){G.quizOn=1;setObj();R.qi=-1;if(!R.me){R.me=makeMe(G.name);R.pid='host';}nextQuestion();}
+function nextQuestion(){
+  R.qi++;
+  if(R.qi>=Q.length)return startReflect();
+  $('#quiz').hidden=true;setState('intro');
+  const i=R.qi;
+  const open=()=>{setState('quiz');hostPanel();};
+  if(i===0){setAskers(['laks']);say([{w:'laks',t:'ได้เวลาแข่งตอบคำถามแล้ว! ข้อแรกพี่ถามเอง ตั้งใจฟังนะ'}],open);}
+  else if(i===1){
+    const pe=npcEl({id:'pan',c:'pan',x:1250,y:410});world.appendChild(pe);pe.classList.add('walking');
+    animEnt(pe,1250,760,410,3000,()=>{
+      say([{w:null,t:'คุณเห็นอาจารย์แพนจากที่ไกลๆ จะเข้าไปคุยไหม?'}],()=>{
+        const c=openModal(`<h2 class="serif">จะเข้าไปคุยไหม?</h2><button class="opt step" id="panYes">เข้าไปคุย</button><button class="opt step" id="panNo">ไม่คุย</button>`);
+        const continueQuestion=()=>say([{w:'pan',t:'อ่าว? ว่าไง'},{w:'pan',t:'อาจารย์เดินดูรอบๆ แอบสังเกตดูพวกวัสดุมา เลยอยากถามว่า'}],open);
+        $('#panYes',c).onclick=()=>{closeModal();P.x=760;P.el&&setPos(P.el,760,410);continueQuestion();};
+        $('#panNo',c).onclick=()=>{closeModal();say([{w:'sys',t:'นิสัย'}],continueQuestion);};
+      });
+    });
+  }else if(i===2){
+    setAskers([]);R.alarmAt=Date.now();setState('intro');
+    say([{w:'sys',t:'สุดท้ายก็โดนถามอยู่ดีเน้อะ'},{w:'sys',t:'เอ๊ะ นั่นอะไรน่ะ?'}],()=>{
+      showAlarm();
+      setTimeout(()=>{hideAlarm();$('#beacon').hidden=false;
+        const ne=npcEl({id:'new',c:'new',x:1250,y:410});world.appendChild(ne);ne.classList.add('walking');
+        animEnt(ne,1250,700,410,1500,()=>say([
+          {w:'new',t:'อ่าว มาถึงจุดนี้ แสดงว่ารู้ข้อมูลหมดแล้วเน้อะ งั้นฉันจะถาม'},
+          {w:'new',t:'ไม่งั้นไม่ให้กลับบ้าน!'}
+        ],()=>{
+          const c=openModal(`<h2 class="serif">จะตอบว่าอะไร?</h2>
+            <button class="opt step" id="newA">กรี้ด</button>
+            <button class="opt step" id="newB">แล้วเพื่อนหนูล่ะคะ?</button>
+            <button class="opt step" id="newC">ก็มาดิค้าบ</button>`);
+          const go=()=>{closeModal();say([{w:'new',t:'(เมิน)จะถามละน้า'}],open);};
+          ['newA','newB','newC'].forEach(id=>$('#'+id,c).onclick=go);
+        }));
+      },2400);
+    });
+  }else if(i===3)say([{w:'new',t:'มาต่อกันที่ข้อ 4 ค่ะ'}],open);
+  else say([{w:'new',t:'ข้อสุดท้ายแล้วค่ะ สู้ๆ!'}],open);
+}
+function setAskers(keys){
+  $$('.ent',world).forEach(e=>{if(e.id!=='e_me')e.remove();});
+  keys.forEach(k=>world.appendChild(npcEl({id:k,c:k,x:k==='laks'?650:760,y:405})));
+  $$('.ent.hs',world).forEach(e=>{e.classList.remove('hs');const pg=e.querySelector('.ping');if(pg)pg.remove();});
+}
+function showAlarm(){$('#alarm').hidden=false;}
+function hideAlarm(){$('#alarm').hidden=true;}
+function hostPanel(){
+  const root=$('#quiz');root.hidden=false;
+  root.innerHTML='<div class="qwrap"><div id="qmain"></div><div class="hostbar step" id="hbar"></div></div>';
+  hostRefresh();
+}
+function hostRefresh(){
+  if(R.phase==='reflect'||R.phase==='end')return hostReflectRefresh();
+  if(R.phase!=='quiz'||$('#quiz').hidden||!$('#qmain'))return;
+  renderQ($('#qmain'),viewOf(R.me,R.qi),{
+    answer:i=>{answerOn(R.me,R.qi,i);saveMe();hostRefresh();},
+    hint:()=>{hintOn(R.me,R.qi);saveMe();hostRefresh();}});
+  const ps=Object.values(allPlayers()).filter(p=>p&&p.name&&p.online!==false);
+  const chips=ps.map(p=>{const s=p.q&&p.q[R.qi];const d=s&&s.done;return `<span class="chip ${d?'ok':''}">${esc(p.name)} ${d?'✓':'…'}</span>`;}).join('');
+  const top=leaders().slice(0,3).map((p,i)=>`${i+1}. ${esc(p.name)} ${p.score||0}`).join(' • ');
+  const last=R.qi===Q.length-1;
+  $('#hbar').innerHTML=`<div style="flex:1 1 260px"><div class="chips">${chips}</div><div style="margin-top:6px;font-size:.88rem;opacity:.85">อันดับ: ${top}</div></div>
+   <div class="chips"><button class="btn ghost step" id="qrBtn">QR เชิญเพื่อน</button><button class="btn step" id="nextQ">${last?'ไปช่วงสะท้อนความคิด':'ข้อถัดไป'}</button></div>`;
+  $('#nextQ').onclick=nextQuestion;
+  $('#qrBtn').onclick=()=>{$('#quiz').hidden=true;openLobby(true);};
+}
+
+/* ---- สะท้อนความคิด + สรุป ---- */
+function startReflect(){
+  $('#beacon').hidden=true;setState('reflect');
+  const root=$('#quiz');root.hidden=false;
+  root.innerHTML=`<div class="qwrap"><div class="qcard card step"><h2 class="serif" style="color:var(--gold);margin-bottom:6px">ปิดท้ายภารกิจ</h2>
+   <div class="qtext">${REFLECT_Q}</div><p style="opacity:.9">${REFLECT_HINT}</p>${ASPECTS}
+   <p style="opacity:.85;margin:8px 0">ทุกคนพิมพ์ความคิดเห็นอิสระของตัวเองได้ที่นี่หรือบนมือถือ</p>
+   <textarea id="myRefl" maxlength="400" placeholder="พิมพ์ความคิดเห็นของคุณ…">${esc(R.me.refl||'')}</textarea>
+   <div class="row" style="margin-top:8px"><button class="btn step" id="sendRefl">ส่งความคิดเห็น</button></div>
+   <h3 class="serif" style="margin-top:14px">ความคิดเห็นของเพื่อนๆ</h3><div class="wall" id="wall"></div>
+   <div class="row"><button class="btn step" id="endBtn">สรุปผลและคุณค่าของปราสาท</button></div></div></div>`;
+  $('#sendRefl').onclick=()=>{R.me.refl=$('#myRefl').value.trim();saveMe();hostReflectRefresh();toast('ส่งความคิดเห็นแล้ว');};
+  $('#endBtn').onclick=endGame;
+  hostReflectRefresh();
+}
+function hostReflectRefresh(){
+  const w=$('#wall');if(!w)return;
+  const rs=Object.values(allPlayers()).filter(p=>p&&p.refl);
+  w.innerHTML=rs.length?rs.map(p=>`<blockquote>${esc(p.refl)}<cite>— ${esc(p.name)}</cite></blockquote>`).join(''):'<p style="opacity:.7">ยังไม่มีความคิดเห็น</p>';
+}
+function endGame(){
+  if($('#myRefl'))R.me.refl=$('#myRefl').value.trim();saveMe();
+  setState('end');const b=boardData();
+  $('#quiz').innerHTML=`<div class="qwrap"><div class="qcard card step"><h2 class="serif" style="color:var(--gold)">สรุปผลการสำรวจปราสาทเมืองสิงห์</h2>${valuesHTML()}${boardHTML(b)}
+   <div class="row"><button class="btn ghost step" id="dlBtn">ดาวน์โหลดผล (CSV)</button><button class="btn step" id="againBtn">เล่นใหม่</button></div></div></div>`;
+  $('#dlBtn').onclick=()=>{
+    const q=s=>'"'+String(s).replace(/"/g,'""')+'"';
+    const hd=['อันดับ','ชื่อ',...Q.flatMap((_,i)=>[`ข้อ${i+1} คะแนน`,`ข้อ${i+1} ดูคำใบ้`]),'คะแนนรวม','ดูคำใบ้รวม','ความคิดเห็น'].join(',');
+    const rows=b.map((r,i)=>[i+1,q(r.n),...r.q.flatMap(x=>x?[x.lv,x.h]:['','']),r.s,r.h,q(r.r)].join(','));
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+[hd,...rows].join('\n')],{type:'text/csv;charset=utf-8'}));a.download='ผลเกมปราสาทเมืองสิงห์.csv';a.click();
+  };
+  $('#againBtn').onclick=()=>location.reload();
+}
+
+/* =====================================================================
+   ฝั่งผู้เล่นคนอื่น (มือถือ) — เปิดผ่านลิงก์ #join=รหัส
+   ===================================================================== */
+function startJoiner(code){
+  $('#title').hidden=true;$('#stage').hidden=true;$('#joinApp').hidden=false;
+  R.code=code;
+  const root=$('#joinApp');
+  root.innerHTML=`<div class="jwrap"><h1 class="serif">ถอดรหัสลับ ปราสาทเมืองสิงห์</h1><p>เข้าร่วมห้อง <b class="codebig" style="font-size:1.3rem">${esc(code)}</b></p>
+   <form id="jf"><label for="jn">ชื่อของคุณ</label><input id="jn" maxlength="16" placeholder="เช่น น้องมิ้นต์" autocomplete="off" required><button class="btn step" style="width:100%" type="submit">เข้าร่วม</button></form><div id="jbody"></div></div>`;
+  const show=h=>{$('#jbody').innerHTML=h;};
+  const retry='<p style="margin-top:10px"><button class="btn step" onclick="location.reload()">ลองใหม่</button></p>';
+  let saved='';try{saved=sessionStorage.getItem('singh_'+code)||'';}catch(e){}
+  let shownQ=-1,first=true,lastAlarm=0;
+  function showQ(qi){
+    if(shownQ!==qi||!$('#jq')){show('<div id="jq" style="margin-top:12px"></div><p id="jwait" style="text-align:center;margin-top:10px;opacity:.85"></p>');shownQ=qi;}
+    const v=viewOf(R.me,qi);
+    renderQ($('#jq'),v,{answer:i=>{answerOn(R.me,qi,i);saveMe();showQ(qi);},hint:()=>{hintOn(R.me,qi);saveMe();showQ(qi);}});
+    $('#jwait').textContent=v.done?'รอผู้คุมจอไปข้อถัดไป…':'';
+  }
+  function showReflect(){
+    show(`<div class="card step" style="margin-top:14px"><h2 class="serif" style="color:var(--gold)">ปิดท้ายภารกิจ</h2><div class="qtext">${REFLECT_Q}</div><p style="opacity:.9">${REFLECT_HINT}</p>${ASPECTS}
+     <textarea id="jr" maxlength="400" placeholder="พิมพ์ความคิดเห็นของคุณ…">${esc(R.me.refl||'')}</textarea>
+     <div class="row"><button class="btn step" id="jsend">ส่งความคิดเห็น</button></div><div id="jok"></div></div>`);
+    $('#jsend').onclick=()=>{R.me.refl=$('#jr').value.trim();saveMe();$('#jok').innerHTML='<div class="note ok">ส่งแล้ว! แก้ไขแล้วกดส่งซ้ำได้</div>';};
+  }
+  function showEnd(){
+    roomRef('players').once('value').then(s=>{R.remote=s.val()||{};
+      show(`<div class="card step" style="margin-top:14px"><h2 class="serif" style="color:var(--gold)">สรุปผล</h2>${valuesHTML()}${boardHTML(boardData())}</div>`);});
+  }
+  function onState(s){
+    if(!s){show('<div class="note bad">ห้องนี้ถูกปิดแล้ว</div>'+retry);return;}
+    if(first){lastAlarm=s.alarm||0;first=false;}
+    else if(s.alarm&&s.alarm!==lastAlarm){lastAlarm=s.alarm;const a=$('#alarm');a.hidden=false;setTimeout(()=>a.hidden=true,2400);}
+    R.phase=s.phase;
+    if(s.phase==='quiz')showQ(s.qi);
+    else if(s.phase==='reflect')showReflect();
+    else if(s.phase==='end')showEnd();
+    else show(`<div class="card step" style="margin-top:14px"><p>${s.phase==='lobby'?'เข้าห้องแล้ว! รอผู้คุมจอกดเริ่มแข่งขัน…':'กำลังเตรียมคำถามถัดไป…'}</p></div>`);
+  }
+  $('#jf').onsubmit=async e=>{
+    e.preventDefault();const name=$('#jn').value.trim()||'ผู้เล่น';$('#jf').hidden=true;
+    if(!fbInit()){show(`<div class="note bad">${esc(R.err)}</div>`+retry);return;}
+    show('<div class="note sysn">กำลังเข้าห้อง…</div>');
+    try{
+      const st=await roomRef('state').once('value');
+      if(!st.exists()){show('<div class="note bad">ไม่พบห้องนี้ ตรวจรหัสห้อง หรือให้ผู้คุมจอเปิดห้องก่อน</div>'+retry);return;}
+      R.pid=saved||('p'+Math.random().toString(36).slice(2,9));
+      try{sessionStorage.setItem('singh_'+code,R.pid);}catch(e2){}
+      R.me=makeMe(name);
+      const old=await roomRef('players/'+R.pid).once('value');
+      if(old.exists()){const o=old.val();Object.assign(R.me,{score:o.score||0,hints:o.hints||0,correct:o.correct||0,skipped:o.skipped||0,refl:o.refl||''});
+        Object.keys(o.q||{}).forEach(k=>{const s=o.q[k];if(s)R.me.q[k]={wrong:s.wrong||[],hintN:s.hintN||0,done:!!s.done,ok:!!s.ok,pts:s.pts||0};});}
+      saveMe();
+      const pr=roomRef('players/'+R.pid+'/online');pr.set(true);pr.onDisconnect().set(false);
+      roomRef('state').on('value',snap=>onState(snap.val()));
+    }catch(err){show(`<div class="note bad">เชื่อมต่อไม่ได้: ${esc(err.message)}</div>`+retry);}
+  };
+}
+
+/* ---------------- เริ่มเกม ---------------- */
+$('#nameForm').onsubmit=e=>{
+  e.preventDefault();G.name=($('#nameIn').value.trim()||'ผู้เล่น').slice(0,16);
+  $('#title').hidden=true;$('#hud').hidden=false;renderNB();
+  build('S1');
+  say([{w:null,t:'วันนี้โรงเรียนได้พาคุณมาท่องเที่ยวที่ปราสาทเมืองสิงห์ จังหวัดกาญจนบุรี แต่ 8 โมงเป็นเวลาที่เช้าเกินไปสำหรับคุณ คุณแค่คิดว่าจะรีบๆ ฟังอาจารย์บรรยายให้จบแล้วกลับบ้านดีกว่า'}],askReady);
+};
+function askReady(){
+  const c=openModal(`<h2 class="serif">คุณพร้อมแล้วรึยัง?</h2><div class="note">เตรียมตัวให้ดี ก่อนเริ่มภารกิจถอดรหัสลับ</div><button class="opt step" id="rYes">พร้อมแล้ว!</button><button class="opt step" id="rNo">ยังไม่พร้อม…</button>`);
+  $('#rYes',c).onclick=()=>{closeModal();toast('คลิกที่อาจารย์นิวเพื่อพูดคุย');};
+  $('#rNo',c).onclick=()=>{closeModal();say([{w:null,t:'ว้า คุณไม่มีทางเลือกหรอก เพราะเกมนี้มัน linear ไปกันต่อออ'}],()=>toast('คลิกที่อาจารย์นิวเพื่อพูดคุย'));};
+}
+$('#skipBtn').onclick=()=>{
+  G.name=($('#nameIn').value.trim()||'ผู้เล่น').slice(0,16);Object.keys(G.items).forEach(k=>G.items[k]=1);
+  Object.assign(G.f,{talk:2,sys:1,s2:1,s3:1,stumbled:1,riverDone:1});
+  $('#title').hidden=true;$('#hud').hidden=false;renderNB();build('S4');onEnterS4();
+};
+requestAnimationFrame(tick);
+(function init(){
+  const m=location.hash.match(/join=([A-Za-z0-9]+)/);
+  if(m)startJoiner(m[1].toUpperCase());
+  else $('#nameIn').focus();
+})();
+</script>
+</body>
+</html>
